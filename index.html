@@ -6,12 +6,24 @@
     <title>NCERT Complete e-Pathshala Library (Class 6 - 12)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PDF.js Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
-        .iframe-container {
+        .pdf-scroll-container {
             width: 100%;
             height: 80vh;
-            border-radius: 8px;
-            overflow: hidden;
+            overflow-y: auto;
+            background-color: #323639;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 0;
+        }
+        .pdf-page-canvas {
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            max-width: 95%;
+            height: auto;
         }
     </style>
 </head>
@@ -23,7 +35,7 @@
             <span class="text-3xl">📚</span>
             <div>
                 <h1 class="text-xl font-bold">NCERT Digital Library</h1>
-                <p class="text-xs text-indigo-200">Class 6 to 12 - Official Hindi & English Books Reader</p>
+                <p class="text-xs text-indigo-200">Class 6 to 12 - Hindi & English Textbooks Reader</p>
             </div>
         </div>
     </header>
@@ -74,7 +86,7 @@
         <div id="chapters-card" class="bg-white p-6 rounded-lg shadow-md hidden border border-slate-200">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <h3 id="book-title-heading" class="text-xl font-bold text-indigo-900">All Available Chapters</h3>
-                <span class="text-xs bg-indigo-100 text-indigo-800 font-semibold px-2.5 py-1 rounded-full">Official NCERT Textbooks</span>
+                <span class="text-xs bg-indigo-100 text-indigo-800 font-semibold px-2.5 py-1 rounded-full">Official Textbooks</span>
             </div>
             <div id="chapters-list" class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <!-- Chapters render dynamically -->
@@ -90,18 +102,19 @@
             <button onclick="closePdfModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-1.5 rounded-lg transition text-sm">✕ Close Book</button>
         </div>
         
-        <div class="iframe-container bg-white shadow-2xl">
-            <iframe id="pdf-frame" src="" class="w-full h-full border-0"></iframe>
+        <div class="pdf-scroll-container rounded-lg" id="pdf-viewer-container">
+            <div id="loading-spinner" class="text-white text-base py-10">📖 Book Load Ho Rahi Hai, Kripya Intezar Karein...</div>
+            <div id="canvas-wrapper" class="flex flex-col items-center w-full"></div>
         </div>
 
         <div class="text-center text-slate-400 text-xs pt-2">
-            Tip: Pinch to zoom or scroll up/down to flip through the pages easily.
+            Tip: Scroll down to read all pages smoothly.
         </div>
     </div>
 
     <!-- Data Engine & Reader JS -->
     <script>
-        // Official NCERT Book Master Codes
+        // Official NCERT Master Map
         const ncertMaster = {
             "6": {
                 "Science": { 
@@ -184,7 +197,7 @@
                     "Physics Part-I (English)": { totalChapters: 8, code: "leph1" },
                     "Physics Part-II (English)": { totalChapters: 6, code: "leph2" },
                     "भौतिकी भाग-I (Hindi)": { totalChapters: 8, code: "lhph1" },
-                    "भौतिकी भाग-II (Hindi)": { totalChapters: 6, code: "lhph2" },
+                    "भौतिकी भाग-II (Hindi)": { totalChapters: 6, code: "lhph2" }
                 },
                 "Chemistry": { 
                     "Chemistry Part-I (English)": { totalChapters: 5, code: "lech1" },
@@ -268,19 +281,52 @@
             }
         }
 
-        // Reliable Google PDF Embed Engine for Cross-Origin NCERT PDFs
-        function openPdfModal(rawPdfUrl, chapterTitle) {
+        // Native PDF.js Renderer Engine
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+        async function openPdfModal(rawPdfUrl, chapterTitle) {
             document.getElementById('pdf-modal').classList.remove('hidden');
             document.getElementById('modal-chapter-title').innerText = chapterTitle;
             
-            // Using Google Docs Viewer to safely bypass CORS restrictions
-            const embeddedViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(rawPdfUrl)}&embedded=true`;
-            document.getElementById('pdf-frame').src = embeddedViewerUrl;
+            const wrapper = document.getElementById('canvas-wrapper');
+            const spinner = document.getElementById('loading-spinner');
+            
+            wrapper.innerHTML = '';
+            spinner.style.display = 'block';
+
+            // CORS Bypass Proxy URL for NCERT Server
+            const proxyPdfUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rawPdfUrl)}`;
+
+            try {
+                const loadingTask = pdfjsLib.getDocument(proxyPdfUrl);
+                const pdf = await loadingTask.promise;
+                
+                spinner.style.display = 'none';
+
+                // Render all pages sequentially
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const viewport = page.getViewport({ scale: 1.3 });
+
+                    const canvas = document.createElement('canvas');
+                    canvas.className = 'pdf-page-canvas';
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    wrapper.appendChild(canvas);
+
+                    await page.render({ canvasContext: context, viewport: viewport }).promise;
+                }
+            } catch (error) {
+                spinner.innerText = '⚠️ Book render karne me samasya aayi. Kripya dobara try karein.';
+                console.error('PDF Render Error:', error);
+            }
         }
 
         function closePdfModal() {
             document.getElementById('pdf-modal').classList.add('hidden');
-            document.getElementById('pdf-frame').src = '';
+            document.getElementById('canvas-wrapper').innerHTML = '';
         }
     </script>
 </body>
