@@ -3,28 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NCERT Complete Digital Library (Class 6 - 12)</title>
+    <title>NCERT Digital Library</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Mozilla PDF.js Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
-        .iframe-container {
+        .pdf-scroll-container {
             width: 100%;
             height: 82vh;
-            border-radius: 12px;
-            overflow: hidden;
-            background-color: #ffffff;
+            overflow-y: auto;
+            background-color: #2a2a2e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 0;
+        }
+        .pdf-page-canvas {
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            max-width: 95%;
+            height: auto;
         }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen flex flex-col font-sans">
 
-    <!-- Header / Navbar -->
+    <!-- Header -->
     <header class="bg-indigo-700 text-white shadow-md p-4 flex items-center justify-between">
         <div class="flex items-center space-x-3">
             <span class="text-3xl">📚</span>
             <div>
                 <h1 class="text-xl font-bold">NCERT Digital Library</h1>
-                <p class="text-xs text-indigo-200">Class 6 to 12 - Official Hindi & English Textbooks</p>
+                <p class="text-xs text-indigo-200">Class 6 to 12 - Reader Mode</p>
             </div>
         </div>
     </header>
@@ -37,7 +48,7 @@
             <h2 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Select Your Book Details:</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 
-                <!-- Class Dropdown -->
+                <!-- Class -->
                 <div>
                     <label class="block text-sm font-semibold mb-1 text-slate-600">Select Class:</label>
                     <select id="class-select" onchange="onClassChange()" class="w-full p-2.5 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-indigo-500">
@@ -52,7 +63,7 @@
                     </select>
                 </div>
 
-                <!-- Subject Dropdown -->
+                <!-- Subject -->
                 <div>
                     <label class="block text-sm font-semibold mb-1 text-slate-600">Select Subject:</label>
                     <select id="subject-select" onchange="onSubjectChange()" class="w-full p-2.5 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-indigo-500" disabled>
@@ -60,7 +71,7 @@
                     </select>
                 </div>
 
-                <!-- Book Title Dropdown -->
+                <!-- Book Title -->
                 <div>
                     <label class="block text-sm font-semibold mb-1 text-slate-600">Select Book Title:</label>
                     <select id="book-select" onchange="loadChapters()" class="w-full p-2.5 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-indigo-500" disabled>
@@ -71,38 +82,38 @@
             </div>
         </div>
 
-        <!-- Chapters List View -->
+        <!-- Chapters List -->
         <div id="chapters-card" class="bg-white p-6 rounded-lg shadow-md hidden border border-slate-200">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <h3 id="book-title-heading" class="text-xl font-bold text-indigo-900">All Available Chapters</h3>
-                <span class="text-xs bg-indigo-100 text-indigo-800 font-semibold px-2.5 py-1 rounded-full">NCERT Official Server</span>
             </div>
-            <div id="chapters-list" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <!-- Chapters render dynamically -->
-            </div>
+            <div id="chapters-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
         </div>
 
     </main>
 
-    <!-- Modal for Official Book Viewer -->
-    <div id="pdf-modal" class="fixed inset-0 bg-slate-950/90 hidden z-50 flex flex-col justify-between p-2 md:p-4">
+    <!-- Same-Tab Reader Viewer (Overlay) -->
+    <div id="pdf-modal" class="fixed inset-0 bg-slate-950/95 hidden z-50 flex flex-col justify-between p-2 md:p-4">
         <div class="flex justify-between items-center text-white pb-2 px-2">
             <span id="modal-chapter-title" class="font-bold text-base md:text-lg">Reading Mode</span>
-            <button onclick="closePdfModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-1 rounded-lg transition text-sm">✕ Close Book</button>
+            <button onclick="closePdfModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-1.5 rounded-lg transition text-sm">✕ Close Book</button>
         </div>
         
-        <div class="iframe-container shadow-2xl">
-            <iframe id="pdf-frame" src="" class="w-full h-full border-0"></iframe>
+        <div class="pdf-scroll-container rounded-lg" id="pdf-viewer-container">
+            <div id="loading-spinner" class="text-white text-base py-10 flex flex-col items-center gap-2">
+                <div class="animate-spin text-3xl">⏳</div>
+                <div>Kitab Same Page Par Load Ho Rahi Hai, Kripya Intezar Karein...</div>
+            </div>
+            <div id="canvas-wrapper" class="flex flex-col items-center w-full"></div>
         </div>
 
         <div class="text-center text-slate-400 text-xs pt-1">
-            Official NCERT Reader: Click page controls to view next pages.
+            Same-Tab Mode: Scroll down to read all pages smoothly.
         </div>
     </div>
 
-    <!-- Data Engine & Reader JS -->
+    <!-- Data Engine & Script -->
     <script>
-        // Master Database with Official NCERT Book Codes
         const ncertMaster = {
             "6": {
                 "Science": { 
@@ -255,15 +266,13 @@
                 
                 for (let i = 1; i <= bookInfo.totalChapters; i++) {
                     const chNum = i < 10 ? '0' + i : i;
-                    
-                    // Official NCERT e-Pathshala Reader Engine Link
-                    const officialViewerUrl = `https://ncert.nic.in/textbook.php?${bookInfo.code}=${i}-${bookInfo.totalChapters}`;
+                    const pdfUrl = `https://ncert.nic.in/textbook/pdf/${bookInfo.code}${chNum}.pdf`;
 
                     listContainer.innerHTML += `
                         <div class="flex items-center justify-between bg-slate-50 border p-3.5 rounded-lg hover:bg-indigo-50 transition">
                             <span class="font-semibold text-slate-700">Chapter ${i}</span>
-                            <button onclick="openPdfModal('${officialViewerUrl}', '${bk} - Chapter ${i}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg shadow-sm flex items-center gap-1">
-                                📖 Read Book
+                            <button onclick="openSameTabViewer('${pdfUrl}', '${bk} - Chapter ${i}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm">
+                                📖 Read Chapter
                             </button>
                         </div>
                     `;
@@ -271,15 +280,52 @@
             }
         }
 
-        function openPdfModal(viewerUrl, chapterTitle) {
+        // Configure PDF.js Worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        async function openSameTabViewer(rawPdfUrl, chapterTitle) {
             document.getElementById('pdf-modal').classList.remove('hidden');
             document.getElementById('modal-chapter-title').innerText = chapterTitle;
-            document.getElementById('pdf-frame').src = viewerUrl;
+            
+            const wrapper = document.getElementById('canvas-wrapper');
+            const spinner = document.getElementById('loading-spinner');
+            
+            wrapper.innerHTML = '';
+            spinner.style.display = 'flex';
+
+            // High-speed reliable CORS worker proxy
+            const corsProxyUrl = `https://corsproxy.io/?${encodeURIComponent(rawPdfUrl)}`;
+
+            try {
+                const loadingTask = pdfjsLib.getDocument(corsProxyUrl);
+                const pdf = await loadingTask.promise;
+                
+                spinner.style.display = 'none';
+
+                // Render all pages directly into HTML5 canvas inside same page
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const viewport = page.getViewport({ scale: 1.2 });
+
+                    const canvas = document.createElement('canvas');
+                    canvas.className = 'pdf-page-canvas';
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    wrapper.appendChild(canvas);
+
+                    await page.render({ canvasContext: context, viewport: viewport }).promise;
+                }
+            } catch (error) {
+                console.error(error);
+                spinner.innerHTML = '⚠️ Kitab load hone me samasya aayi. Kripya punah prayas karein.';
+            }
         }
 
         function closePdfModal() {
             document.getElementById('pdf-modal').classList.add('hidden');
-            document.getElementById('pdf-frame').src = '';
+            document.getElementById('canvas-wrapper').innerHTML = '';
         }
     </script>
 </body>
