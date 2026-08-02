@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NCERT e-Pathshala Library (Class 6 - 8)</title>
+    <title>NCERT e-Pathshala Library (Class 6 - 12)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- StPageFlip for 3D Book Turn Effect -->
@@ -23,7 +23,7 @@
             <span class="text-3xl">📚</span>
             <div>
                 <h1 class="text-xl font-bold">NCERT Online Digital Library</h1>
-                <p class="text-xs text-indigo-200">Class 6 to 8 - Interactive Flipbook Reader</p>
+                <p class="text-xs text-indigo-200">Class 6 to 12 - Interactive Flipbook Reader</p>
             </div>
         </div>
     </header>
@@ -44,6 +44,10 @@
                         <option value="6">Class 6</option>
                         <option value="7">Class 7</option>
                         <option value="8">Class 8</option>
+                        <option value="9">Class 9</option>
+                        <option value="10">Class 10</option>
+                        <option value="11">Class 11</option>
+                        <option value="12">Class 12</option>
                     </select>
                 </div>
 
@@ -95,42 +99,40 @@
 
     <!-- Data Engine & Reader JS -->
     <script>
-        // Official NCERT Sample Data & Direct Paths Structure (Class 6 - 8)
+        // Demo PDF path (Aap yahan apni NCERT PDF ke links replace kar sakte hain)
+        const SAMPLE_PDF = "https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf";
+
+        // NCERT Data Structure (Class 6 to 12)
         const ncertDatabase = {
             "6": {
-                "Science": {
-                    "Curiosity (Science)": [
-                        { name: "Chapter 1: Components of Food", pdf: "https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf" },
-                        { name: "Chapter 2: Sorting Materials Into Groups", pdf: "https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf" }
-                    ]
-                },
-                "Mathematics": {
-                    "Ganita Prakash": [
-                        { name: "Chapter 1: Patterns in Mathematics", pdf: "https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf" },
-                        { name: "Chapter 2: Lines and Angles", pdf: "https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf" }
-                    ]
-                }
+                "Science": { "Curiosity (Science)": [{ name: "Chapter 1: Components of Food", pdf: SAMPLE_PDF }, { name: "Chapter 2: Sorting Materials Into Groups", pdf: SAMPLE_PDF }] },
+                "Mathematics": { "Ganita Prakash": [{ name: "Chapter 1: Patterns in Mathematics", pdf: SAMPLE_PDF }, { name: "Chapter 2: Lines and Angles", pdf: SAMPLE_PDF }] }
             },
             "7": {
-                "Science": {
-                    "Science TextBook Class 7": [
-                        { name: "Chapter 1: Nutrition in Plants", pdf: "https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf" },
-                        { name: "Chapter 2: Nutrition in Animals", pdf: "https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf" }
-                    ]
-                },
-                "Social Science": {
-                    "Our Pasts - II (History)": [
-                        { name: "Chapter 1: Tracing Changes Through A Thousand Years", pdf: "https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf" }
-                    ]
-                }
+                "Science": { "Science TextBook Class 7": [{ name: "Chapter 1: Nutrition in Plants", pdf: SAMPLE_PDF }, { name: "Chapter 2: Nutrition in Animals", pdf: SAMPLE_PDF }] },
+                "Social Science": { "Our Pasts - II": [{ name: "Chapter 1: Tracing Changes Through A Thousand Years", pdf: SAMPLE_PDF }] }
             },
             "8": {
-                "Science": {
-                    "Science TextBook Class 8": [
-                        { name: "Chapter 1: Crop Production and Management", pdf: "https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf" },
-                        { name: "Chapter 2: Microorganisms: Friend and Foe", pdf: "https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf" }
-                    ]
-                }
+                "Science": { "Science TextBook Class 8": [{ name: "Chapter 1: Crop Production and Management", pdf: SAMPLE_PDF }] },
+                "Mathematics": { "Mathematics Class 8": [{ name: "Chapter 1: Rational Numbers", pdf: SAMPLE_PDF }] }
+            },
+            "9": {
+                "Science": { "Science TextBook Class 9": [{ name: "Chapter 1: Matter in Our Surroundings", pdf: SAMPLE_PDF }, { name: "Chapter 2: Is Matter Around Us Pure", pdf: SAMPLE_PDF }] },
+                "Mathematics": { "Mathematics Class 9": [{ name: "Chapter 1: Number Systems", pdf: SAMPLE_PDF }] }
+            },
+            "10": {
+                "Science": { "Science TextBook Class 10": [{ name: "Chapter 1: Chemical Reactions and Equations", pdf: SAMPLE_PDF }, { name: "Chapter 6: Life Processes", pdf: SAMPLE_PDF }] },
+                "Mathematics": { "Mathematics Class 10": [{ name: "Chapter 1: Real Numbers", pdf: SAMPLE_PDF }] }
+            },
+            "11": {
+                "Biology": { "Biology Class 11": [{ name: "Chapter 1: The Living World", pdf: SAMPLE_PDF }, { name: "Chapter 2: Biological Classification", pdf: SAMPLE_PDF }, { name: "Chapter 3: Plant Kingdom", pdf: SAMPLE_PDF }, { name: "Chapter 4: Animal Kingdom", pdf: SAMPLE_PDF }] },
+                "Physics": { "Physics Part-I": [{ name: "Chapter 1: Units and Measurements", pdf: SAMPLE_PDF }] },
+                "Chemistry": { "Chemistry Part-I": [{ name: "Chapter 1: Some Basic Concepts of Chemistry", pdf: SAMPLE_PDF }] }
+            },
+            "12": {
+                "Biology": { "Biology Class 12": [{ name: "Chapter 1: Sexual Reproduction in Flowering Plants", pdf: SAMPLE_PDF }, { name: "Chapter 2: Human Reproduction", pdf: SAMPLE_PDF }, { name: "Chapter 3: Reproductive Health", pdf: SAMPLE_PDF }, { name: "Chapter 4: Principles of Inheritance and Variation", pdf: SAMPLE_PDF }] },
+                "Chemistry": { "Chemistry Part-I": [{ name: "Chapter 1: Solutions", pdf: SAMPLE_PDF }, { name: "Chapter 2: Electrochemistry", pdf: SAMPLE_PDF }] },
+                "Physics": { "Physics Part-I": [{ name: "Chapter 1: Electric Charges and Fields", pdf: SAMPLE_PDF }] }
             }
         };
 
