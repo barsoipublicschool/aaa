@@ -89,7 +89,6 @@
 
     <!-- JavaScript Application Logic -->
     <script>
-        // 🚨 IMPORTANT: Yahan apna Google Apps Script Web App URL paste karein
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyStz56XZLt9M_dCRxDdzmeAY4ws_iEiiq3Kjldm2c6uN69uRtUCvrTTmnTdUC8hvHj/exec";
 
         let sheetData = [];
@@ -111,7 +110,6 @@
         // 2. Populate Class Dropdown dynamically
         function populateClassDropdown() {
             const classSelect = document.getElementById('class-select');
-            // Remove duplicates and filter empty values
             const classes = [...new Set(sheetData.map(item => item.class))].filter(Boolean);
             
             classes.forEach(cls => {
@@ -193,15 +191,25 @@
             }
         }
 
-        // 6. Open Modal Reader
+        // 6. Open Modal Reader (Direct Drive Embedded Preview)
         function openSameTabViewer(drivePreviewLink, chapterTitle) {
             document.getElementById('pdf-modal').classList.remove('hidden');
             document.getElementById('modal-chapter-title').innerText = chapterTitle;
             
-            // Fast loading viewer wrapper
-            const cleanLink = drivePreviewLink.trim();
-            const finalUrl = "https://docs.google.com/viewer?url=" + encodeURIComponent(cleanLink) + "&embedded=true";
-            
+            let finalUrl = drivePreviewLink.trim();
+
+            // Direct Drive Link Parsing logic (Extract File ID and Resource Key)
+            const idMatch = finalUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            const keyMatch = finalUrl.match(/resourcekey=([a-zA-Z0-9_-]+)/);
+
+            if (idMatch && idMatch[1]) {
+                const fileId = idMatch[1];
+                finalUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+                if (keyMatch && keyMatch[1]) {
+                    finalUrl += `?resourcekey=${keyMatch[1]}`;
+                }
+            }
+
             document.getElementById('pdf-frame').src = finalUrl;
         }
 
