@@ -195,16 +195,15 @@
 
         // 6. Open Modal Reader
         function openSameTabViewer(drivePreviewLink, chapterTitle) {
-    document.getElementById('pdf-modal').classList.remove('hidden');
-    document.getElementById('modal-chapter-title').innerText = chapterTitle;
-    
-    // Drive preview link ko Google Docs Embedded Viewer se wrap kar diya hai
-    // Isse saare pages smooth load honge bina memory error ke
-    const cleanLink = drivePreviewLink.trim();
-    const finalUrl = "https://docs.google.com/viewer?url=" + encodeURIComponent(cleanLink) + "&embedded=true";
-
-    document.getElementById('pdf-frame').src = finalUrl;
-}
+            document.getElementById('pdf-modal').classList.remove('hidden');
+            document.getElementById('modal-chapter-title').innerText = chapterTitle;
+            
+            // Fast loading viewer wrapper
+            const cleanLink = drivePreviewLink.trim();
+            const finalUrl = "https://docs.google.com/viewer?url=" + encodeURIComponent(cleanLink) + "&embedded=true";
+            
+            document.getElementById('pdf-frame').src = finalUrl;
+        }
 
         // 7. Close Modal Reader
         function closePdfModal() {
