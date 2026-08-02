@@ -6,26 +6,6 @@
     <title>NCERT Digital Library</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Mozilla PDF.js Engine -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <style>
-        .pdf-scroll-container {
-            width: 100%;
-            height: 82vh;
-            overflow-y: auto;
-            background-color: #2a2a2e;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 15px 0;
-        }
-        .pdf-page-canvas {
-            margin-bottom: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            max-width: 95%;
-            height: auto;
-        }
-    </style>
 </head>
 <body class="bg-slate-100 min-h-screen flex flex-col font-sans">
 
@@ -35,7 +15,7 @@
             <span class="text-3xl">📚</span>
             <div>
                 <h1 class="text-xl font-bold">NCERT Digital Library</h1>
-                <p class="text-xs text-indigo-200">Class 6 to 12 - Reader Mode</p>
+                <p class="text-xs text-indigo-200">Class 6 to 12 - Same Tab Reader</p>
             </div>
         </div>
     </header>
@@ -48,7 +28,7 @@
             <h2 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Select Your Book Details:</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 
-                <!-- Class -->
+                <!-- Class Dropdown -->
                 <div>
                     <label class="block text-sm font-semibold mb-1 text-slate-600">Select Class:</label>
                     <select id="class-select" onchange="onClassChange()" class="w-full p-2.5 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-indigo-500">
@@ -63,7 +43,7 @@
                     </select>
                 </div>
 
-                <!-- Subject -->
+                <!-- Subject Dropdown -->
                 <div>
                     <label class="block text-sm font-semibold mb-1 text-slate-600">Select Subject:</label>
                     <select id="subject-select" onchange="onSubjectChange()" class="w-full p-2.5 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-indigo-500" disabled>
@@ -71,7 +51,7 @@
                     </select>
                 </div>
 
-                <!-- Book Title -->
+                <!-- Book Title Dropdown -->
                 <div>
                     <label class="block text-sm font-semibold mb-1 text-slate-600">Select Book Title:</label>
                     <select id="book-select" onchange="loadChapters()" class="w-full p-2.5 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-indigo-500" disabled>
@@ -92,27 +72,23 @@
 
     </main>
 
-    <!-- Same-Tab Reader Viewer (Overlay) -->
+    <!-- Same Tab Reader Modal -->
     <div id="pdf-modal" class="fixed inset-0 bg-slate-950/95 hidden z-50 flex flex-col justify-between p-2 md:p-4">
         <div class="flex justify-between items-center text-white pb-2 px-2">
             <span id="modal-chapter-title" class="font-bold text-base md:text-lg">Reading Mode</span>
             <button onclick="closePdfModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-1.5 rounded-lg transition text-sm">✕ Close Book</button>
         </div>
         
-        <div class="pdf-scroll-container rounded-lg" id="pdf-viewer-container">
-            <div id="loading-spinner" class="text-white text-base py-10 flex flex-col items-center gap-2">
-                <div class="animate-spin text-3xl">⏳</div>
-                <div>Kitab Same Page Par Load Ho Rahi Hai, Kripya Intezar Karein...</div>
-            </div>
-            <div id="canvas-wrapper" class="flex flex-col items-center w-full"></div>
+        <div class="w-full h-[82vh] bg-white rounded-lg overflow-hidden shadow-2xl">
+            <iframe id="pdf-frame" src="" class="w-full h-full border-0"></iframe>
         </div>
 
         <div class="text-center text-slate-400 text-xs pt-1">
-            Same-Tab Mode: Scroll down to read all pages smoothly.
+            Same-Tab Embedded Viewer: Use PDF controls to zoom and navigate.
         </div>
     </div>
 
-    <!-- Data Engine & Script -->
+    <!-- Script Section -->
     <script>
         const ncertMaster = {
             "6": {
@@ -280,52 +256,19 @@
             }
         }
 
-        // Configure PDF.js Worker
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-        async function openSameTabViewer(rawPdfUrl, chapterTitle) {
+        function openSameTabViewer(rawPdfUrl, chapterTitle) {
             document.getElementById('pdf-modal').classList.remove('hidden');
             document.getElementById('modal-chapter-title').innerText = chapterTitle;
             
-            const wrapper = document.getElementById('canvas-wrapper');
-            const spinner = document.getElementById('loading-spinner');
+            // Standard Cloudflare Embedded Viewer Engine for PDFs
+            const embeddedViewerUrl = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(rawPdfUrl)}`;
             
-            wrapper.innerHTML = '';
-            spinner.style.display = 'flex';
-
-            // High-speed reliable CORS worker proxy
-            const corsProxyUrl = `https://corsproxy.io/?${encodeURIComponent(rawPdfUrl)}`;
-
-            try {
-                const loadingTask = pdfjsLib.getDocument(corsProxyUrl);
-                const pdf = await loadingTask.promise;
-                
-                spinner.style.display = 'none';
-
-                // Render all pages directly into HTML5 canvas inside same page
-                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                    const page = await pdf.getPage(pageNum);
-                    const viewport = page.getViewport({ scale: 1.2 });
-
-                    const canvas = document.createElement('canvas');
-                    canvas.className = 'pdf-page-canvas';
-                    const context = canvas.getContext('2d');
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-
-                    wrapper.appendChild(canvas);
-
-                    await page.render({ canvasContext: context, viewport: viewport }).promise;
-                }
-            } catch (error) {
-                console.error(error);
-                spinner.innerHTML = '⚠️ Kitab load hone me samasya aayi. Kripya punah prayas karein.';
-            }
+            document.getElementById('pdf-frame').src = embeddedViewerUrl;
         }
 
         function closePdfModal() {
             document.getElementById('pdf-modal').classList.add('hidden');
-            document.getElementById('canvas-wrapper').innerHTML = '';
+            document.getElementById('pdf-frame').src = '';
         }
     </script>
 </body>
