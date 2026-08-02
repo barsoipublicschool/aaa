@@ -77,13 +77,13 @@
             <button onclick="closePdfModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-1.5 rounded-lg transition text-sm">✕ Close Book</button>
         </div>
         
-        <!-- Embedded Google Drive Reader Frame -->
+        <!-- Embedded High-Performance PDF Reader Frame -->
         <div class="w-full h-[85vh] bg-white rounded-lg overflow-hidden shadow-2xl relative">
             <iframe id="pdf-frame" src="" class="w-full h-full border-0"></iframe>
         </div>
 
         <div class="text-center text-slate-400 text-xs pt-1">
-            Zoom-In / Zoom-Out aur Fullscreen ke liye reader ke top-right controls ka use karein.
+            Zoom-In / Zoom-Out aur Fullscreen ke liye reader controls ka use karein.
         </div>
     </div>
 
@@ -191,26 +191,23 @@
             }
         }
 
-        // 6. Open Modal Reader (Direct Drive Embedded Preview)
+        // 6. Open Modal Reader (PDF Engine Proxy to render ALL pages smoothly)
         function openSameTabViewer(drivePreviewLink, chapterTitle) {
             document.getElementById('pdf-modal').classList.remove('hidden');
             document.getElementById('modal-chapter-title').innerText = chapterTitle;
             
-            let finalUrl = drivePreviewLink.trim();
-
-            // Direct Drive Link Parsing logic (Extract File ID and Resource Key)
-            const idMatch = finalUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-            const keyMatch = finalUrl.match(/resourcekey=([a-zA-Z0-9_-]+)/);
+            let rawUrl = drivePreviewLink.trim();
+            const idMatch = rawUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
 
             if (idMatch && idMatch[1]) {
                 const fileId = idMatch[1];
-                finalUrl = `https://drive.google.com/file/d/${fileId}/preview`;
-                if (keyMatch && keyMatch[1]) {
-                    finalUrl += `?resourcekey=${keyMatch[1]}`;
-                }
+                // Direct PDF Export Endpoint (Passes raw PDF stream to engine)
+                const pdfDirectUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+                // PDF.js Engine Embed
+                document.getElementById('pdf-frame').src = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(pdfDirectUrl)}`;
+            } else {
+                document.getElementById('pdf-frame').src = rawUrl;
             }
-
-            document.getElementById('pdf-frame').src = finalUrl;
         }
 
         // 7. Close Modal Reader
