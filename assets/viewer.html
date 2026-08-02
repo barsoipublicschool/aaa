@@ -70,21 +70,24 @@
 
     <!-- Top Sticky Bar with Back Button -->
     <div class="toolbar">
-        <button onclick="history.back()" class="back-btn">⬅ Back to Chapters</button>
+        <button onclick="history.back()" class="back-btn">← Back to Chapters</button>
     </div>
 
     <!-- Loading State & PDF Render Canvas -->
-    <div id="loading">Book loading... Kripya thoda intzar karein...</div>
+    <div id="loading">Book loading... Kripya 2-3 second ka intzar karein...</div>
     <div id="canvas-container"></div>
 
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
         const urlParams = new URLSearchParams(window.location.search);
-        const pdfUrl = urlParams.get('file');
+        const rawPdfUrl = urlParams.get('file');
 
-        if (pdfUrl) {
-            pdfjsLib.getDocument(pdfUrl).promise.then(pdf => {
+        if (rawPdfUrl) {
+            // CORS bypass proxy URL
+            const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawPdfUrl);
+
+            pdfjsLib.getDocument(proxyUrl).promise.then(pdf => {
                 document.getElementById('loading').style.display = 'none';
                 const container = document.getElementById('canvas-container');
 
