@@ -77,7 +77,7 @@
             <button onclick="closePdfModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-1.5 rounded-lg transition text-sm">✕ Close Book</button>
         </div>
         
-        <!-- Embedded High-Performance PDF Reader Frame -->
+        <!-- Embedded Google Drive Reader Frame -->
         <div class="w-full h-[85vh] bg-white rounded-lg overflow-hidden shadow-2xl relative">
             <iframe id="pdf-frame" src="" class="w-full h-full border-0"></iframe>
         </div>
@@ -191,20 +191,22 @@
             }
         }
 
-        // 6. Open Modal Reader (PDF Engine Proxy to render ALL pages smoothly)
+        // 6. Open Modal Reader (Clean Drive Embed Format)
         function openSameTabViewer(drivePreviewLink, chapterTitle) {
             document.getElementById('pdf-modal').classList.remove('hidden');
             document.getElementById('modal-chapter-title').innerText = chapterTitle;
             
             let rawUrl = drivePreviewLink.trim();
             const idMatch = rawUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            const keyMatch = rawUrl.match(/resourcekey=([a-zA-Z0-9_-]+)/);
 
             if (idMatch && idMatch[1]) {
                 const fileId = idMatch[1];
-                // Direct PDF Export Endpoint (Passes raw PDF stream to engine)
-                const pdfDirectUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
-                // PDF.js Engine Embed
-                document.getElementById('pdf-frame').src = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(pdfDirectUrl)}`;
+                let finalEmbedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+                if (keyMatch && keyMatch[1]) {
+                    finalEmbedUrl += `?resourcekey=${keyMatch[1]}`;
+                }
+                document.getElementById('pdf-frame').src = finalEmbedUrl;
             } else {
                 document.getElementById('pdf-frame').src = rawUrl;
             }
