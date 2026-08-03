@@ -191,23 +191,23 @@
             }
         }
 
-        // 6. Open Modal Reader (Stable All-Page Loader Format)
-        function openSameTabViewer(drivePreviewLink, chapterTitle) {
-            document.getElementById('pdf-modal').classList.remove('hidden');
-            document.getElementById('modal-chapter-title').innerText = chapterTitle;
-            
-            let rawUrl = drivePreviewLink.trim();
-            const idMatch = rawUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        // 6. Open Modal Reader (Fast Document Stream)
+function openSameTabViewer(drivePreviewLink, chapterTitle) {
+    document.getElementById('pdf-modal').classList.remove('hidden');
+    document.getElementById('modal-chapter-title').innerText = chapterTitle;
+    
+    let rawUrl = drivePreviewLink.trim();
+    const idMatch = rawUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
 
-            if (idMatch && idMatch[1]) {
-                const fileId = idMatch[1];
-                // Is format se saare pages smooth aur bina buffer crash ke render honge
-                document.getElementById('pdf-frame').src = `https://drive.google.com/file/d/${fileId}/preview?rm=embedded`;
-            } else {
-                document.getElementById('pdf-frame').src = rawUrl;
-            }
-        }
-
+    if (idMatch && idMatch[1]) {
+        const fileId = idMatch[1];
+        // Direct View Engine (Bina lazy-load timeout issue ke)
+        const pdfDirectUrl = `https://drive.google.com/uc?id=${fileId}`;
+        document.getElementById('pdf-frame').src = `https://docs.google.com/gview?url=${encodeURIComponent(pdfDirectUrl)}&embedded=true`;
+    } else {
+        document.getElementById('pdf-frame').src = rawUrl;
+    }
+}
         // 7. Close Modal Reader
         function closePdfModal() {
             document.getElementById('pdf-modal').classList.add('hidden');
