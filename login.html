@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EduCloud Studio - Educational Resources</title>
+  <title>EduCloud Studio - Student Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body {
       background-color: #080c14;
       color: #e2e8f0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
     .card-dark {
       background-color: #0f172a;
@@ -21,30 +21,64 @@
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col justify-center items-center p-4">
 
-  <!-- Header / Navbar -->
-  <header class="border-b border-slate-800 bg-[#0d1322]/80 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 py-3.5 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/20">
+  <!-- ================= 1. STUDENT LOGIN SCREEN (Pehle Dikhega) ================= -->
+  <div id="login-section" class="w-full max-w-md card-dark p-6 sm:p-8 rounded-3xl shadow-2xl space-y-6">
+    <div class="text-center space-y-2">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-3xl shadow-lg shadow-indigo-500/20 mx-auto mb-2">
         📚
       </div>
+      <h2 class="text-2xl font-bold text-white">Student Login</h2>
+      <p class="text-xs text-slate-400">EduCloud Studio Portal Access</p>
+    </div>
+
+    <form onsubmit="handleLogin(event)" class="space-y-4">
       <div>
-        <h1 class="font-bold text-lg text-white leading-tight">EduCloud Studio</h1>
-        <p class="text-[11px] text-slate-400">Digital Resource Portal</p>
+        <label class="block text-xs font-medium text-slate-400 mb-1.5">User ID / Roll No</label>
+        <div class="relative">
+          <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+          <input type="text" id="userid" required placeholder="Enter User ID" class="w-full bg-[#080c14] border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition">
+        </div>
       </div>
-    </div>
 
-    <!-- Login/Logout Toggle Button -->
-    <div id="auth-btn-container">
-      <button onclick="showLoginModal()" id="nav-login-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
-        <i class="fa-solid fa-lock"></i> <span>Teacher Login</span>
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1.5">Password</label>
+        <div class="relative">
+          <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+          <input type="password" id="password" required placeholder="Enter Password" class="w-full bg-[#080c14] border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition">
+        </div>
+      </div>
+
+      <div id="login-error" class="text-xs text-red-400 bg-red-500/10 border border-red-500/20 p-2.5 rounded-xl hidden text-center font-medium"></div>
+
+      <button type="submit" id="login-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-sm transition shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2">
+        <span>Login</span> <i class="fa-solid fa-right-to-bracket"></i>
       </button>
-    </div>
-  </header>
+    </form>
+  </div>
 
-  <!-- Main Content Container -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+  <!-- ================= 2. MAIN DASHBOARD (Login ke baad hi khulega) ================= -->
+  <div id="dashboard-section" class="w-full max-w-7xl mx-auto space-y-6 hidden">
+    
+    <!-- Header / Navbar -->
+    <header class="card-dark p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3 w-full sm:w-auto">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/20">
+          📚
+        </div>
+        <div>
+          <h1 class="font-bold text-lg text-white leading-tight">EduCloud Studio</h1>
+          <p class="text-[11px] text-slate-400">Digital Resource Portal</p>
+        </div>
+      </div>
+
+      <!-- Logout Button -->
+      <button onclick="handleLogout()" class="px-4 py-2 bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white rounded-xl text-xs font-semibold transition flex items-center gap-2">
+        <i class="fa-solid fa-power-off"></i> <span>Logout</span>
+      </button>
+    </header>
 
     <!-- Search & Filters -->
     <div class="card-dark p-4 sm:p-6 rounded-2xl space-y-4">
@@ -67,99 +101,85 @@
       </div>
     </div>
 
-    <!-- Content Grid Section -->
+    <!-- Resource Grid -->
     <div>
-      <!-- Loader -->
-      <div id="loader" class="py-20 text-center space-y-3">
+      <div id="loader" class="py-16 text-center space-y-3">
         <i class="fa-solid fa-circle-notch fa-spin text-3xl text-indigo-500"></i>
         <p class="text-sm text-slate-400">Loading resources from Google Sheet...</p>
       </div>
 
-      <!-- Resource Grid -->
       <div id="resource-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 hidden"></div>
 
-      <!-- No Results Message -->
       <div id="no-data" class="py-16 text-center space-y-2 hidden">
         <div class="text-4xl">🔍</div>
         <h3 class="text-slate-300 font-semibold">No Resources Found</h3>
         <p class="text-xs text-slate-500">Try adjusting your search query or filter selections.</p>
       </div>
     </div>
-  </main>
-
-  <!-- Login Modal -->
-  <div id="login-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="card-dark w-full max-w-md rounded-2xl p-6 sm:p-8 space-y-6 relative shadow-2xl">
-      <button onclick="hideLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-
-      <div class="text-center space-y-1">
-        <div class="w-12 h-12 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center text-xl mx-auto mb-3">
-          <i class="fa-solid fa-user-shield"></i>
-        </div>
-        <h2 class="text-xl font-bold text-white">Teacher Login</h2>
-        <p class="text-xs text-slate-400">Enter credentials to access admin panel</p>
-      </div>
-
-      <form onsubmit="handleLogin(event)" class="space-y-4">
-        <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">User ID</label>
-          <input type="text" id="userid" required placeholder="Enter User ID" class="w-full bg-[#080c14] border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition">
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Password</label>
-          <input type="password" id="password" required placeholder="Enter Password" class="w-full bg-[#080c14] border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition">
-        </div>
-
-        <div id="login-error" class="text-xs text-red-400 bg-red-500/10 border border-red-500/20 p-2.5 rounded-xl hidden text-center"></div>
-
-        <button type="submit" id="login-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-sm transition shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2">
-          <span>Login</span> <i class="fa-solid fa-right-to-bracket"></i>
-        </button>
-      </form>
-    </div>
   </div>
 
-  <!-- JavaScript Integration -->
+
+  <!-- JavaScript Logic -->
   <script>
-    // Merged Web App URL
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwS0fTCOs2KAHecJXcOYuhII0u7XlgkzwsJZ_xYXm2UwE5CU6TAW5zjeKD6qMYVagmx/exec";
 
     let rawData = [];
 
+    // Page Load hote hi login status check karega
     document.addEventListener("DOMContentLoaded", () => {
-      checkAuthStatus();
-      fetchResources();
+      if (localStorage.getItem("isLoggedIn") === "true") {
+        showDashboard();
+      }
     });
 
-    // Check Login Status from localStorage
-    function checkAuthStatus() {
-      const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-      const authContainer = document.getElementById("auth-btn-container");
+    // Handle Login Submit
+    async function handleLogin(e) {
+      e.preventDefault();
+      const userid = document.getElementById("userid").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const errorDiv = document.getElementById("login-error");
+      const loginBtn = document.getElementById("login-btn");
 
-      if (isLoggedIn) {
-        authContainer.innerHTML = `
-          <div class="flex items-center gap-2">
-            <a href="update.html" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-lg shadow-emerald-600/20">
-              <i class="fa-solid fa-plus"></i> <span>Add Resource</span>
-            </a>
-            <button onclick="handleLogout()" class="p-2 text-slate-400 hover:text-red-400 rounded-xl hover:bg-slate-800 transition" title="Logout">
-              <i class="fa-solid fa-right-from-bracket"></i>
-            </button>
-          </div>
-        `;
-      } else {
-        authContainer.innerHTML = `
-          <button onclick="showLoginModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
-            <i class="fa-solid fa-lock"></i> <span>Teacher Login</span>
-          </button>
-        `;
+      errorDiv.classList.add("hidden");
+      loginBtn.disabled = true;
+      loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Checking...`;
+
+      try {
+        const url = `${WEB_APP_URL}?action=login&userid=${encodeURIComponent(userid)}&password=${encodeURIComponent(password)}`;
+        const response = await fetch(url);
+        const res = await response.json();
+
+        if (res.status === "success") {
+          localStorage.setItem("isLoggedIn", "true");
+          showDashboard();
+        } else {
+          errorDiv.innerText = res.message || "Invalid User ID or Password!";
+          errorDiv.classList.remove("hidden");
+        }
+      } catch (err) {
+        errorDiv.innerText = "Login verification me problem aayi.";
+        errorDiv.classList.remove("hidden");
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = `<span>Login</span> <i class="fa-solid fa-right-to-bracket"></i>`;
       }
     }
 
-    // Fetch Resources Data from Google Apps Script
+    // Show Dashboard after Login
+    function showDashboard() {
+      document.getElementById("login-section").classList.add("hidden");
+      document.getElementById("dashboard-section").classList.remove("hidden");
+      document.body.classList.remove("justify-center", "items-center");
+      fetchResources();
+    }
+
+    // Handle Logout
+    function handleLogout() {
+      localStorage.removeItem("isLoggedIn");
+      location.reload();
+    }
+
+    // Fetch Resources Data
     async function fetchResources() {
       const loader = document.getElementById("loader");
       const grid = document.getElementById("resource-grid");
@@ -181,15 +201,13 @@
         grid.classList.remove("hidden");
 
       } catch (err) {
-        console.error("Fetch Error:", err);
         loader.innerHTML = `
-          <p class="text-red-400 text-sm font-medium">⚠️ Failed to load resources.</p>
-          <p class="text-slate-500 text-xs">Please check your internet connection or Apps Script Deployment.</p>
+          <p class="text-red-400 text-sm font-medium">⚠️ Data load nahi ho paya.</p>
         `;
       }
     }
 
-    // Dynamic Filter Dropdowns Setup
+    // Setup Filters
     function populateFilters(data) {
       const classSelect = document.getElementById("filter-class");
       const subjectSelect = document.getElementById("filter-subject");
@@ -212,7 +230,7 @@
       });
     }
 
-    // Render Cards in Grid
+    // Render Cards
     function renderData(data) {
       const grid = document.getElementById("resource-grid");
       const noData = document.getElementById("no-data");
@@ -229,14 +247,12 @@
       grid.classList.remove("hidden");
 
       data.forEach(item => {
-        // Expected Row Format: [Class, Subject, Title, Type, Link]
         const itemClass = item[0] || "General";
         const subject   = item[1] || "General";
         const title     = item[2] || "Untitled Resource";
         const type      = item[3] || "PDF";
         const link      = item[4] || "#";
 
-        // Dynamic Icon & Style by Type
         let icon = "fa-file-pdf";
         let badgeBg = "bg-red-500/10 text-red-400 border-red-500/20";
 
@@ -300,58 +316,6 @@
       });
 
       renderData(filtered);
-    }
-
-    // Login Modal Helpers
-    function showLoginModal() {
-      document.getElementById("login-modal").classList.remove("hidden");
-    }
-
-    function hideLoginModal() {
-      document.getElementById("login-modal").classList.add("hidden");
-      document.getElementById("login-error").classList.add("hidden");
-    }
-
-    // Login Authentication (GET request action=login)
-    async function handleLogin(e) {
-      e.preventDefault();
-      const userid = document.getElementById("userid").value.trim();
-      const password = document.getElementById("password").value.trim();
-      const errorDiv = document.getElementById("login-error");
-      const loginBtn = document.getElementById("login-btn");
-
-      errorDiv.classList.add("hidden");
-      loginBtn.disabled = true;
-      loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Checking...`;
-
-      try {
-        const url = `${WEB_APP_URL}?action=login&userid=${encodeURIComponent(userid)}&password=${encodeURIComponent(password)}`;
-        const response = await fetch(url);
-        const res = await response.json();
-
-        if (res.status === "success") {
-          localStorage.setItem("isLoggedIn", "true");
-          hideLoginModal();
-          checkAuthStatus();
-        } else {
-          errorDiv.innerText = res.message || "Invalid Credentials!";
-          errorDiv.classList.remove("hidden");
-        }
-      } catch (err) {
-        errorDiv.innerText = "Verification failed. Please try again.";
-        errorDiv.classList.remove("hidden");
-      } finally {
-        loginBtn.disabled = false;
-        loginBtn.innerHTML = `<span>Login</span> <i class="fa-solid fa-right-to-bracket"></i>`;
-      }
-    }
-
-    // Logout Helper
-    function handleLogout() {
-      if (confirm("Kya aap logout karna chahte hain?")) {
-        localStorage.removeItem("isLoggedIn");
-        checkAuthStatus();
-      }
     }
   </script>
 </body>
