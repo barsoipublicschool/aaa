@@ -139,26 +139,24 @@
         let allMaterials = [];
         let currentTypeFilter = "all";
 
-        // Helper Function to Extract Clean Title
-        function getCleanTitle(item, index) {
-            // Check all possible keys where text might exist
-            const rawTitle = item.title || item.chapter || item.book_name || item.topic || item.name || "";
+        // Pure Clean Title Logic
+        function getCleanTitle(item) {
+            // Priority list for text titles
+            const candidate = item.title || item.chapter || item.book_name || item.topic || item.name || item.subject || "";
             
-            // If rawTitle is missing OR if it is a link starting with http/https
-            if (!rawTitle || rawTitle.toString().startsWith("http://") || rawTitle.toString().startsWith("https://")) {
-                const sub = item.subject ? `${item.subject} - ` : "";
-                return `${sub}Study Resource ${index + 1}`;
+            // Check if valid text and NOT a URL
+            if (candidate && !candidate.toString().startsWith("http://") && !candidate.toString().startsWith("https://")) {
+                return candidate.toString().trim();
             }
-            
-            return rawTitle;
+
+            return "Study Material";
         }
 
-        // Helper Function to Extract Real Link
+        // Extract Link Logic
         function getRealLink(item) {
             if (item.link && item.link.toString().startsWith("http")) return item.link;
             if (item.drive_link && item.drive_link.toString().startsWith("http")) return item.drive_link;
             
-            // If link is stored under 'title' column by mistake
             for (let key in item) {
                 if (item[key] && item[key].toString().startsWith("http")) {
                     return item[key];
@@ -185,7 +183,7 @@
                 applyFilters();
             } catch (error) {
                 console.error("Data Fetching Error:", error);
-                document.getElementById('loader-msg').innerHTML = `<span class="text-red-400">⚠️ Data load nahi ho saka. Sheet Web App re-deploy karein.</span>`;
+                document.getElementById('loader-msg').innerHTML = `<span class="text-red-400">⚠️ Data load nahi ho saka. Web App URL check karein.</span>`;
             }
         }
 
@@ -201,8 +199,8 @@
         function applyFilters() {
             const searchQuery = document.getElementById('search-input').value.toLowerCase();
 
-            const filtered = allMaterials.filter((item, idx) => {
-                const title = getCleanTitle(item, idx).toLowerCase();
+            const filtered = allMaterials.filter((item) => {
+                const title = getCleanTitle(item).toLowerCase();
                 const subject = (item.subject || "").toLowerCase();
                 const type = (item.type || "pdf").toLowerCase();
 
@@ -227,8 +225,8 @@
                 document.getElementById('empty-state').classList.add('hidden');
             }
 
-            items.forEach((item, index) => {
-                const title = getCleanTitle(item, index);
+            items.forEach((item) => {
+                const title = getCleanTitle(item);
                 const subject = item.subject || "General";
                 const type = (item.type || "pdf").toLowerCase();
                 const link = getRealLink(item);
