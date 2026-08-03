@@ -139,6 +139,34 @@
         let allMaterials = [];
         let currentTypeFilter = "all";
 
+        // Helper Function to Extract Clean Title
+        function getCleanTitle(item, index) {
+            // Check all possible keys where text might exist
+            const rawTitle = item.title || item.chapter || item.book_name || item.topic || item.name || "";
+            
+            // If rawTitle is missing OR if it is a link starting with http/https
+            if (!rawTitle || rawTitle.toString().startsWith("http://") || rawTitle.toString().startsWith("https://")) {
+                const sub = item.subject ? `${item.subject} - ` : "";
+                return `${sub}Study Resource ${index + 1}`;
+            }
+            
+            return rawTitle;
+        }
+
+        // Helper Function to Extract Real Link
+        function getRealLink(item) {
+            if (item.link && item.link.toString().startsWith("http")) return item.link;
+            if (item.drive_link && item.drive_link.toString().startsWith("http")) return item.drive_link;
+            
+            // If link is stored under 'title' column by mistake
+            for (let key in item) {
+                if (item[key] && item[key].toString().startsWith("http")) {
+                    return item[key];
+                }
+            }
+            return "#";
+        }
+
         // Fetch Data from Google Apps Script
         async function fetchMaterials() {
             document.getElementById('loader').classList.remove('hidden');
@@ -173,8 +201,8 @@
         function applyFilters() {
             const searchQuery = document.getElementById('search-input').value.toLowerCase();
 
-            const filtered = allMaterials.filter(item => {
-                const title = (item.title || item.chapter || item.book_name || "").toLowerCase();
+            const filtered = allMaterials.filter((item, idx) => {
+                const title = getCleanTitle(item, idx).toLowerCase();
                 const subject = (item.subject || "").toLowerCase();
                 const type = (item.type || "pdf").toLowerCase();
 
@@ -199,11 +227,11 @@
                 document.getElementById('empty-state').classList.add('hidden');
             }
 
-            items.forEach(item => {
-                const title = item.title || item.chapter || item.book_name || "Study Resource";
+            items.forEach((item, index) => {
+                const title = getCleanTitle(item, index);
                 const subject = item.subject || "General";
                 const type = (item.type || "pdf").toLowerCase();
-                const link = item.link || item.drive_link || "#";
+                const link = getRealLink(item);
 
                 let badgeStyle = "bg-blue-500/10 text-blue-400 border-blue-500/20";
                 let icon = "📄";
@@ -240,7 +268,7 @@
 
                         <div class="mt-5 pt-4 border-t border-slate-800/80 flex items-center justify-between">
                             <span class="text-xs text-slate-400">Ready to Access</span>
-                            <button onclick="openResource('${link}', '${type}', '${title}')" 
+                            <button onclick="openResource('${link}', '${type}', '${title.replace(/'/g, "\\'")}')" 
                                 class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-lg shadow-indigo-600/20 flex items-center gap-1.5">
                                 ${btnText}
                             </button>
