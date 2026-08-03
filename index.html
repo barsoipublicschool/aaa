@@ -4,112 +4,225 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EduCloud Studio</title>
-  <!-- Tailwind CSS CDN -->
+  <!-- Tailwind CSS & FontAwesome -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body {
-      background-color: #0b0f19;
+      background-color: #080c14;
       color: #e2e8f0;
       font-family: system-ui, -apple-system, sans-serif;
     }
+    .card-dark {
+      background-color: #0f172a;
+      border: 1px solid #1e293b;
+    }
     .card-glow {
-      background: #111827;
-      border: 1px solid #1f2937;
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      transition: all 0.2s ease-in-out;
     }
     .card-glow:hover {
       border-color: #3b82f6;
     }
   </style>
 </head>
-<body class="p-4 max-w-4xl mx-auto">
+<body class="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
 
-  <!-- NCERT Books Banner (Open Portal Text Removed) -->
-  <div class="card-glow rounded-2xl p-4 flex items-center justify-between border border-amber-500/30 bg-amber-500/5 mb-6">
+  <!-- 1. Header & Search Bar -->
+  <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-2xl text-white shadow-lg shadow-purple-500/30">
+        🚀
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold text-white tracking-wide">EduCloud Studio</h1>
+        <p class="text-xs text-slate-400">Digital Learning Resources Hub</p>
+      </div>
+    </div>
+
+    <!-- Search Box -->
+    <div class="relative w-full md:w-72">
+      <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+      <input 
+        type="text" 
+        id="searchInput" 
+        onkeyup="filterResources()"
+        placeholder="Flowering..." 
+        class="w-full bg-[#0d1322] border border-blue-900/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition"
+      />
+    </div>
+  </div>
+
+  <!-- 2. Dashboard Stats Cards -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div class="card-dark rounded-2xl p-4 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-xl">📚</div>
+      <div>
+        <h4 class="text-lg font-bold text-white" id="stat-total">0</h4>
+        <p class="text-xs text-slate-400">Total Items</p>
+      </div>
+    </div>
+
+    <div class="card-dark rounded-2xl p-4 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-xl">📄</div>
+      <div>
+        <h4 class="text-lg font-bold text-white" id="stat-pdf">0</h4>
+        <p class="text-xs text-slate-400">PDFs & Notes</p>
+      </div>
+    </div>
+
+    <div class="card-dark rounded-2xl p-4 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-xl">🎬</div>
+      <div>
+        <h4 class="text-lg font-bold text-white" id="stat-video">0</h4>
+        <p class="text-xs text-slate-400">Video Lectures</p>
+      </div>
+    </div>
+
+    <div class="card-dark rounded-2xl p-4 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-xl">📝</div>
+      <div>
+        <h4 class="text-lg font-bold text-white" id="stat-assignments">0</h4>
+        <p class="text-xs text-slate-400">Assignments</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. NCERT Books Banner (Open Portal Removed) -->
+  <div class="card-dark rounded-2xl p-4 border border-amber-500/30 bg-amber-500/5 flex items-center justify-between">
     <div class="flex items-center gap-4">
       <div class="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-2xl">
         📚
       </div>
       <div>
-        <h3 class="font-bold text-white text-lg">NCERT Books</h3>
-        <p class="text-xs text-gray-400">Official Portal (E-Books & Textbooks)</p>
+        <h3 class="font-bold text-white text-base">NCERT Books</h3>
+        <p class="text-xs text-slate-400">Official Portal (E-Books & Textbooks)</p>
       </div>
     </div>
-    <!-- "Open Portal" text is removed as requested -->
   </div>
 
-  <!-- Cards Container -->
+  <!-- 4. Category Filter Tabs -->
+  <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+    <button onclick="filterCategory('all')" class="cat-btn active flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">
+      ✨ All Items
+    </button>
+    <button onclick="filterCategory('pdf')" class="cat-btn flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">
+      📄 PDFs & Notes
+    </button>
+    <button onclick="filterCategory('video')" class="cat-btn flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">
+      🎬 Video Lectures
+    </button>
+    <button onclick="filterCategory('assignment')" class="cat-btn flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">
+      📝 Assignments
+    </button>
+  </div>
+
+  <!-- 5. Dynamic Resources Grid -->
   <div id="cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <!-- Dynamic Content Will Load Here -->
+    <!-- JS se yahan dynamic cards load honge -->
   </div>
 
+  <!-- JavaScript Code -->
   <script>
-    // Visual layout rendering logic for cards
-    function renderCards(dataList) {
+    // Sample Data Format corresponding to Google Sheets:
+    // A: Class | B: Subject | C: Title | D: Type | E: Link
+    let rawSheetData = [
+      ["Class 12th", "Zoology", "Reproduction in Flowering Plants", "PDF", "https://example.com/file1.pdf"],
+      ["Class 11th", "Botany", "Cell Cycle and Division", "PDF", "https://example.com/file2.pdf"]
+    ];
+
+    let currentCategory = 'all';
+
+    // Google Apps Script API Call (Apna Google Apps Script URL yahan replace karein agar zaroorat ho)
+    /*
+    async function loadDataFromSheet() {
+      const WEB_APP_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL";
+      try {
+        const response = await fetch(WEB_APP_URL);
+        const data = await response.json();
+        // data.shift(); // Pehla Header Row (A1:E1) hatane ke liye
+        rawSheetData = data;
+        renderCards();
+        updateStats();
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      }
+    }
+    */
+
+    function renderCards() {
       const container = document.getElementById('cards-container');
+      const searchVal = document.getElementById('searchInput').value.toLowerCase();
       container.innerHTML = '';
 
-      dataList.forEach(item => {
-        // Updated Column Mapping:
-        // item[0] = Class (A)
-        // item[1] = Subject (B)
-        // item[2] = Title (C)
-        // item[3] = Type (D)
-        // item[4] = Link (E)
-        
-        const itemClass = item[0] || 'Class N/A';
-        const subject = item[1] || 'General';
-        const title = item[2] || 'Untitled Resource';
-        const type = item[3] || 'PDF';
-        const link = item[4] || '#';
+      rawSheetData.forEach(row => {
+        const itemClass = row[0] || '';
+        const subject   = row[1] || '';
+        const title     = row[2] || 'Untitled Resource';
+        const type      = row[3] || 'PDF';
+        const link      = row[4] || '#';
 
-        const card = document.createElement('div');
-        card.className = "card-glow rounded-2xl p-5 border border-slate-800 flex flex-col justify-between space-y-4";
+        // Filter Logic
+        const matchesCategory = (currentCategory === 'all') || (type.toLowerCase().includes(currentCategory));
+        const matchesSearch = title.toLowerCase().includes(searchVal) || 
+                              subject.toLowerCase().includes(searchVal) || 
+                              itemClass.toLowerCase().includes(searchVal);
 
-        card.innerHTML = `
-          <div>
-            <!-- Top Row: Type Tag & Class/Subject Info -->
-            <div class="flex items-center justify-between text-xs font-semibold mb-3">
-              <span class="px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wider flex items-center gap-1.5">
-                <i class="fa-solid fa-file-pdf"></i> ${type}
-              </span>
-              <span class="text-gray-400 text-right">
-                <span class="text-blue-400 font-medium">${itemClass}</span> • ${subject}
-              </span>
+        if (matchesCategory && matchesSearch) {
+          const card = document.createElement('div');
+          card.className = "card-glow rounded-2xl p-5 border border-slate-800 flex flex-col justify-between space-y-4";
+
+          card.innerHTML = `
+            <div>
+              <!-- Header Row: PDF Badge Left | Class & Subject Right -->
+              <div class="flex items-center justify-between text-xs font-semibold mb-3">
+                <span class="px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wider flex items-center gap-1.5">
+                  <i class="fa-solid fa-file-pdf"></i> ${type}
+                </span>
+                <span class="text-slate-400">
+                  <strong class="text-blue-400 font-medium">${itemClass}</strong> • ${subject}
+                </span>
+              </div>
+
+              <!-- Main Title (Pahle Study Material tha, ab Sheet ka Title hai) -->
+              <h3 class="text-lg font-bold text-white leading-snug">
+                ${title}
+              </h3>
             </div>
 
-            <!-- Main Title (Where Study Material was previously written) -->
-            <h2 class="text-xl font-bold text-white leading-snug tracking-wide">
-              ${title}
-            </h2>
-          </div>
-
-          <!-- Bottom Row: Action Button -->
-          <div class="flex items-center justify-between pt-2 border-t border-slate-800/60">
-            <span class="text-xs text-gray-400">Ready to Access</span>
-            <a href="${link}" target="_blank" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl transition shadow-lg shadow-indigo-600/30 flex items-center gap-2">
-              Read ${type}
-            </a>
-          </div>
-        `;
-
-        container.appendChild(card);
+            <!-- Footer Row: Ready Status & Read Button -->
+            <div class="flex items-center justify-between pt-3 border-t border-slate-800/60">
+              <span class="text-xs text-slate-400">Ready to Access</span>
+              <a href="${link}" target="_blank" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-indigo-600/30 flex items-center gap-2">
+                Read ${type}
+              </a>
+            </div>
+          `;
+          container.appendChild(card);
+        }
       });
     }
 
-    // Example Usage with sample data structure [Class, Subject, Title, Type, Link]
-    const sampleData = [
-      [
-        "Class 12th", 
-        "Zoology", 
-        "Reproduction in Flowering Plants", 
-        "PDF", 
-        "https://example.com/file.pdf"
-      ]
-    ];
+    function updateStats() {
+      document.getElementById('stat-total').innerText = rawSheetData.length;
+      document.getElementById('stat-pdf').innerText = rawSheetData.filter(r => (r[3]||'').toLowerCase().includes('pdf')).length;
+      document.getElementById('stat-video').innerText = rawSheetData.filter(r => (r[3]||'').toLowerCase().includes('video')).length;
+      document.getElementById('stat-assignments').innerText = rawSheetData.filter(r => (r[3]||'').toLowerCase().includes('assignment')).length;
+    }
 
-    // Page Load Par Run Karne Ke Liye:
-    renderCards(sampleData);
+    function filterResources() {
+      renderCards();
+    }
+
+    function filterCategory(cat) {
+      currentCategory = cat;
+      renderCards();
+    }
+
+    // Page Initial Load
+    renderCards();
+    updateStats();
   </script>
 </body>
 </html>
