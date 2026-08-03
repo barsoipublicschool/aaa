@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Resource - EduCloud Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background-color: #080c14;
+      color: #e2e8f0;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .card-dark {
+      background-color: #0f172a;
+      border: 1px solid #1e293b;
+    }
+  </style>
+</head>
+<body class="p-4 md:p-6 max-w-xl mx-auto min-h-screen flex flex-col justify-center">
+
+  <div class="card-dark p-6 md:p-8 rounded-3xl shadow-2xl space-y-6">
+    <div class="text-center space-y-2">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-2xl text-white shadow-lg shadow-indigo-500/30 mx-auto">
+        ➕
+      </div>
+      <h2 class="text-2xl font-bold text-white">Add New Resource</h2>
+      <p class="text-xs text-slate-400">EduCloud Studio Content Manager</p>
+    </div>
+
+    <form onsubmit="submitData(event)" class="space-y-4">
+      
+      <!-- Class & Subject -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1 font-medium">Class / Category</label>
+          <input type="text" id="itemClass" required placeholder="e.g. 9th, 10th, 12th" class="w-full bg-[#0d1322] border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1 font-medium">Subject</label>
+          <input type="text" id="subject" required placeholder="e.g. Science, Biology" class="w-full bg-[#0d1322] border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+        </div>
+      </div>
+
+      <!-- Title -->
+      <div>
+        <label class="block text-xs text-slate-400 mb-1 font-medium">Topic / Title Name</label>
+        <input type="text" id="title" required placeholder="e.g. Photosynthesis Notes" class="w-full bg-[#0d1322] border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+      </div>
+
+      <!-- Type Selection -->
+      <div>
+        <label class="block text-xs text-slate-400 mb-1 font-medium">Resource Type</label>
+        <select id="type" class="w-full bg-[#0d1322] border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+          <option value="PDF">📄 PDF / Notes</option>
+          <option value="Video Lecture">🎬 Video Lecture</option>
+          <option value="Assignment">📝 Assignment</option>
+        </select>
+      </div>
+
+      <!-- Link URL -->
+      <div>
+        <label class="block text-xs text-slate-400 mb-1 font-medium">Resource Link (Google Drive / YouTube / Web)</label>
+        <input type="url" id="link" required placeholder="https://..." class="w-full bg-[#0d1322] border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+      </div>
+
+      <!-- Alert Msg -->
+      <div id="status-msg" class="text-xs text-center hidden font-medium py-2 rounded-xl"></div>
+
+      <!-- Submit Button -->
+      <button type="submit" id="submit-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 text-sm">
+        <i class="fa-solid fa-cloud-arrow-up"></i> <span>Upload Resource</span>
+      </button>
+
+    </form>
+  </div>
+
+  <script>
+    // Apna Web App URL Yahan Dalein
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwS0fTCOs2KAHecJXcOYuhII0u7XlgkzwsJZ_xYXm2UwE5CU6TAW5zjeKD6qMYVagmx/exec";
+
+    async function submitData(e) {
+      e.preventDefault();
+      
+      const btn = document.getElementById("submit-btn");
+      const msg = document.getElementById("status-msg");
+
+      msg.className = "text-xs text-center hidden font-medium py-2 rounded-xl";
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Saving to Sheet...`;
+      btn.disabled = true;
+
+      const formData = new FormData();
+      formData.append("itemClass", document.getElementById("itemClass").value.trim());
+      formData.append("subject", document.getElementById("subject").value.trim());
+      formData.append("title", document.getElementById("title").value.trim());
+      formData.append("type", document.getElementById("type").value);
+      formData.append("link", document.getElementById("link").value.trim());
+
+      try {
+        const response = await fetch(WEB_APP_URL, {
+          method: "POST",
+          body: formData
+        });
+
+        const res = await response.json();
+
+        if (res.status === "success") {
+          msg.innerText = "✅ Resource Successfully Added!";
+          msg.classList.add("bg-emerald-500/10", "text-emerald-400", "border", "border-emerald-500/20");
+          msg.classList.remove("hidden");
+          
+          // Form reset
+          e.target.reset();
+        } else {
+          throw new Error(res.message || "Failed to add");
+        }
+      } catch (err) {
+        msg.innerText = "❌ Error: " + err.message;
+        msg.classList.add("bg-red-500/10", "text-red-400", "border", "border-red-500/20");
+        msg.classList.remove("hidden");
+      } finally {
+        btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> <span>Upload Resource</span>`;
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
