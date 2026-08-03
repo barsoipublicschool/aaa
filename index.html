@@ -3,18 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduCloud - Ultimate Study Dashboard</title>
+    <title>EduCloud - Digital Resource Dashboard</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
         .scrollbar-none::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -33,7 +28,7 @@
                     <h1 class="text-xl font-extrabold bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent">
                         EduCloud Studio
                     </h1>
-                    <p class="text-[11px] text-slate-400 font-medium">Smart Digital Resource Dashboard</p>
+                    <p class="text-[11px] text-slate-400 font-medium">Digital Learning Resources Hub</p>
                 </div>
             </div>
 
@@ -82,19 +77,6 @@
             </div>
         </div>
 
-        <!-- Sheet Selector Tabs (Class 11, 12, Competitive Exams) -->
-        <div class="bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800 flex items-center gap-2 overflow-x-auto scrollbar-none" id="sheet-tabs">
-            <button onclick="switchSheet('Sheet1')" id="tab-Sheet1" class="sheet-btn flex-1 min-w-[140px] py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-lg shadow-indigo-600/30">
-                📁 Class 11 Material
-            </button>
-            <button onclick="switchSheet('Sheet2')" id="tab-Sheet2" class="sheet-btn flex-1 min-w-[140px] py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
-                📁 Class 12 Material
-            </button>
-            <button onclick="switchSheet('Sheet3')" id="tab-Sheet3" class="sheet-btn flex-1 min-w-[140px] py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
-                📁 Competitive / PYQs
-            </button>
-        </div>
-
         <!-- Type Filter Chips -->
         <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none" id="type-filters">
             <button onclick="filterByType('all')" class="type-btn px-4 py-2 rounded-xl text-xs font-bold transition bg-slate-800 text-white border border-slate-700">
@@ -117,7 +99,7 @@
         <!-- Loading Spinner State -->
         <div id="loader" class="text-center py-20">
             <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-indigo-500 border-t-transparent mb-4"></div>
-            <p id="loader-msg" class="text-slate-400 text-sm font-medium">Dashboard resources syncing...</p>
+            <p id="loader-msg" class="text-slate-400 text-sm font-medium">Study resources syncing...</p>
         </div>
 
         <!-- Dynamic Study Material Grid -->
@@ -128,7 +110,7 @@
         <!-- Empty State -->
         <div id="empty-state" class="text-center py-16 hidden">
             <div class="text-4xl mb-3">🔍</div>
-            <p class="text-slate-400 text-sm font-medium">Koi resource nahi mil sanka. Search query ya filter badlein.</p>
+            <p class="text-slate-400 text-sm font-medium">Koi resource nahi mila. Search query ya filter badlein.</p>
         </div>
 
     </main>
@@ -155,18 +137,17 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyStz56XZLt9M_dCRxDdzmeAY4ws_iEiiq3Kjldm2c6uN69uRtUCvrTTmnTdUC8hvHj/exec";
 
         let allMaterials = [];
-        let currentSheet = "Sheet1";
         let currentTypeFilter = "all";
 
         // Fetch Data from Google Apps Script
-        async function fetchMaterials(sheetName) {
+        async function fetchMaterials() {
             document.getElementById('loader').classList.remove('hidden');
             document.getElementById('materials-grid').classList.add('hidden');
             document.getElementById('empty-state').classList.add('hidden');
-            document.getElementById('loader-msg').innerText = "Dashboard resources syncing...";
+            document.getElementById('loader-msg').innerText = "Study resources syncing...";
 
             try {
-                const response = await fetch(`${SCRIPT_URL}?sheet=${sheetName}`);
+                const response = await fetch(SCRIPT_URL);
                 allMaterials = await response.json();
 
                 document.getElementById('loader').classList.add('hidden');
@@ -300,15 +281,6 @@
             document.getElementById('modal-frame').src = '';
         }
 
-        function switchSheet(sheetName) {
-            currentSheet = sheetName;
-            document.querySelectorAll('.sheet-btn').forEach(btn => {
-                btn.className = "sheet-btn flex-1 min-w-[140px] py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60";
-            });
-            document.getElementById(`tab-${sheetName}`).className = "sheet-btn flex-1 min-w-[140px] py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-lg shadow-indigo-600/30";
-            fetchMaterials(sheetName);
-        }
-
         function filterByType(type) {
             currentTypeFilter = type;
             document.querySelectorAll('.type-btn').forEach(btn => {
@@ -319,7 +291,7 @@
         }
 
         // Init
-        fetchMaterials('Sheet1');
+        fetchMaterials();
     </script>
 </body>
 </html>
