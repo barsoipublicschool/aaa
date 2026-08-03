@@ -89,7 +89,7 @@
     </div>
   </div>
 
-  <!-- 3. NCERT Books Banner (Open Portal Removed) -->
+  <!-- 3. NCERT Books Banner (Open Portal Text Removed) -->
   <div class="card-dark rounded-2xl p-4 border border-amber-500/30 bg-amber-500/5 flex items-center justify-between">
     <div class="flex items-center gap-4">
       <div class="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-2xl">
@@ -104,7 +104,7 @@
 
   <!-- 4. Category Filter Tabs -->
   <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-    <button onclick="filterCategory('all')" class="cat-btn active flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">
+    <button onclick="filterCategory('all')" class="cat-btn flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">
       ✨ All Items
     </button>
     <button onclick="filterCategory('pdf')" class="cat-btn flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700 transition">
@@ -120,43 +120,50 @@
 
   <!-- 5. Dynamic Resources Grid -->
   <div id="cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <!-- JS se yahan dynamic cards load honge -->
+    <div class="text-slate-400 text-sm col-span-2 text-center py-6">
+      <i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading resources...
+    </div>
   </div>
 
   <!-- JavaScript Code -->
   <script>
-    // Sample Data Format corresponding to Google Sheets:
-    // A: Class | B: Subject | C: Title | D: Type | E: Link
-    let rawSheetData = [
-      ["Class 12th", "Zoology", "Reproduction in Flowering Plants", "PDF", "https://example.com/file1.pdf"],
-      ["Class 11th", "Botany", "Cell Cycle and Division", "PDF", "https://example.com/file2.pdf"]
-    ];
-
+    let rawSheetData = [];
     let currentCategory = 'all';
 
-    // Google Apps Script API Call (Apna Google Apps Script URL yahan replace karein agar zaroorat ho)
-    /*
-    async function loadDataFromSheet() {
-      const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx3xVmlskgXDm355oNXZ90GL-ry3bgIovPUEYtKFEUZEDXGhlVgRcBj-4E5DyMIA5pn/exec";
+    // Integrated Google Apps Script URL
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx3xVmlskgXDm355oNXZ90GL-ry3bgIovPUEYtKFEUZEDXGhlVgRcBj-4E5DyMIA5pn/exec";
+
+    async function fetchResources() {
       try {
         const response = await fetch(WEB_APP_URL);
         const data = await response.json();
-        // data.shift(); // Pehla Header Row (A1:E1) hatane ke liye
         rawSheetData = data;
         renderCards();
         updateStats();
-      } catch (err) {
-        console.error("Error fetching data:", err);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        document.getElementById('cards-container').innerHTML = `<div class="text-red-400 text-sm col-span-2 text-center py-6">Data load karne me problem aayi. Kripya Apps Script settings check karein.</div>`;
       }
     }
-    */
 
     function renderCards() {
       const container = document.getElementById('cards-container');
       const searchVal = document.getElementById('searchInput').value.toLowerCase();
       container.innerHTML = '';
 
+      if (!rawSheetData || rawSheetData.length === 0) {
+        container.innerHTML = `<div class="text-slate-400 text-sm col-span-2 text-center py-6">Koi data nahi mila.</div>`;
+        return;
+      }
+
       rawSheetData.forEach(row => {
+        // Mapping:
+        // row[0] = Class (A)
+        // row[1] = Subject (B)
+        // row[2] = Title (C)
+        // row[3] = Type (D)
+        // row[4] = Link (E)
+
         const itemClass = row[0] || '';
         const subject   = row[1] || '';
         const title     = row[2] || 'Untitled Resource';
@@ -175,7 +182,7 @@
 
           card.innerHTML = `
             <div>
-              <!-- Header Row: PDF Badge Left | Class & Subject Right -->
+              <!-- Top Row: Type Badge Left | Class & Subject Right -->
               <div class="flex items-center justify-between text-xs font-semibold mb-3">
                 <span class="px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wider flex items-center gap-1.5">
                   <i class="fa-solid fa-file-pdf"></i> ${type}
@@ -185,13 +192,13 @@
                 </span>
               </div>
 
-              <!-- Main Title (Pahle Study Material tha, ab Sheet ka Title hai) -->
+              <!-- Main Title -->
               <h3 class="text-lg font-bold text-white leading-snug">
                 ${title}
               </h3>
             </div>
 
-            <!-- Footer Row: Ready Status & Read Button -->
+            <!-- Bottom Row: Ready Status & Read Button -->
             <div class="flex items-center justify-between pt-3 border-t border-slate-800/60">
               <span class="text-xs text-slate-400">Ready to Access</span>
               <a href="${link}" target="_blank" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-indigo-600/30 flex items-center gap-2">
@@ -220,9 +227,8 @@
       renderCards();
     }
 
-    // Page Initial Load
-    renderCards();
-    updateStats();
+    // Initialize Page Load
+    fetchResources();
   </script>
 </body>
 </html>
