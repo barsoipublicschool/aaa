@@ -3,199 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NCERT Digital Library</title>
+    <title>Professional Digital Library</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
+    </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex flex-col font-sans">
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
 
-    <!-- Header Section -->
-    <header class="bg-indigo-700 text-white shadow-md p-4 flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-            <span class="text-3xl">📚</span>
-            <div>
-                <h1 class="text-xl font-bold">NCERT Digital Library</h1>
-                <p class="text-xs text-indigo-200">Online PDF Reader - Fast & Secure</p>
+    <!-- Header / Navbar -->
+    <header class="bg-slate-800/80 sticky top-0 z-40 border-b border-slate-700/60 glass-card">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-500/30 text-white text-2xl">
+                    📚
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+                        Digital Resource Library
+                    </h1>
+                    <p class="text-xs text-slate-400">Explore Books, Notes & NCERT Modules</p>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="relative w-full md:w-80">
+                <input type="text" id="search-input" onkeyup="filterBooks()" placeholder="Search book or chapter..." 
+                    class="w-full pl-10 pr-4 py-2 bg-slate-950/60 border border-slate-700 rounded-xl text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition">
+                <span class="absolute left-3 top-2.5 text-slate-500 text-sm">🔍</span>
             </div>
         </div>
     </header>
 
-    <!-- Main Content Container -->
-    <main class="container mx-auto max-w-5xl p-4 flex-1">
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 py-8 flex-1 w-full">
 
-        <!-- Selection Filter Panel -->
-        <div class="bg-white p-6 rounded-lg shadow-md mb-6 border border-indigo-100">
-            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Select Your Book Details:</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                
-                <!-- Class Selection Dropdown -->
-                <div>
-                    <label class="block text-sm font-semibold mb-1 text-slate-600">Select Class:</label>
-                    <select id="class-select" onchange="onClassChange()" class="w-full p-2.5 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-indigo-500">
-                        <option value="">-- Choose Class --</option>
-                    </select>
-                </div>
-
-                <!-- Subject Selection Dropdown -->
-                <div>
-                    <label class="block text-sm font-semibold mb-1 text-slate-600">Select Subject:</label>
-                    <select id="subject-select" onchange="onSubjectChange()" class="w-full p-2.5 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-indigo-500" disabled>
-                        <option value="">-- Choose Subject --</option>
-                    </select>
-                </div>
-
-                <!-- Book Title Dropdown -->
-                <div>
-                    <label class="block text-sm font-semibold mb-1 text-slate-600">Select Book Title:</label>
-                    <select id="book-select" onchange="loadChapters()" class="w-full p-2.5 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-indigo-500" disabled>
-                        <option value="">-- Choose Book Title --</option>
-                    </select>
-                </div>
-
-            </div>
+        <!-- Tabs Navigation (Sheet1, Sheet2, Sheet3) -->
+        <div class="flex border-b border-slate-800 mb-8 space-x-2 overflow-x-auto pb-1 scrollbar-none" id="sheet-tabs">
+            <button onclick="switchTab('Sheet1')" id="tab-Sheet1" class="tab-btn px-5 py-2.5 rounded-t-lg font-semibold text-sm transition flex items-center gap-2 bg-indigo-600 text-white shadow-lg">
+                📁 Class 11 Books
+            </button>
+            <button onclick="switchTab('Sheet2')" id="tab-Sheet2" class="tab-btn px-5 py-2.5 rounded-t-lg font-semibold text-sm transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800">
+                📁 Class 12 Books
+            </button>
+            <button onclick="switchTab('Sheet3')" id="tab-Sheet3" class="tab-btn px-5 py-2.5 rounded-t-lg font-semibold text-sm transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800">
+                📁 Question Bank & Notes
+            </button>
         </div>
 
-        <!-- Data Sync Spinner -->
-        <div id="data-loader" class="text-center py-8 text-indigo-700 font-semibold flex items-center justify-center gap-2">
-            <span class="animate-spin text-2xl">⏳</span> Library sync ho rahi hai... Kripya intzar karein...
+        <!-- Loader -->
+        <div id="loader" class="text-center py-20">
+            <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-indigo-500 border-t-transparent mb-4"></div>
+            <p class="text-slate-400 text-sm font-medium">Library resources load ho rahe hain...</p>
         </div>
 
-        <!-- Chapters List Display Card -->
-        <div id="chapters-card" class="bg-white p-6 rounded-lg shadow-md hidden border border-slate-200">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 id="book-title-heading" class="text-xl font-bold text-indigo-900">Available Chapters</h3>
-            </div>
-            <div id="chapters-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        <!-- Books Cards Grid -->
+        <div id="books-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 hidden">
+            <!-- Book Cards JS se dynamically render honge -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="no-results" class="text-center py-16 hidden">
+            <p class="text-slate-500 text-base">❌ Koi book ya chapter nahi mila.</p>
         </div>
 
     </main>
 
-    <!-- Same-Tab PDF Reader Modal View -->
-    <div id="pdf-modal" class="fixed inset-0 bg-slate-950/90 hidden z-50 flex flex-col justify-between p-2 md:p-4">
-        <div class="flex justify-between items-center text-white pb-2 px-2">
-            <span id="modal-chapter-title" class="font-bold text-base md:text-lg">Reading Mode</span>
-            <button onclick="closePdfModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-1.5 rounded-lg transition text-sm">✕ Close Book</button>
+    <!-- Modal PDF Viewer Screen -->
+    <div id="pdf-modal" class="fixed inset-0 bg-slate-950/90 hidden z-50 flex flex-col p-2 md:p-4">
+        <div class="flex justify-between items-center text-white pb-3 px-2">
+            <h3 id="modal-title" class="font-bold text-base md:text-lg text-indigo-300 truncate">Book Reader</h3>
+            <button onclick="closeModal()" class="bg-red-600/80 hover:bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition shadow-md">
+                ✕ Close Book
+            </button>
         </div>
-        
-        <!-- Embedded Google Drive Reader Frame -->
-        <div class="w-full h-[85vh] bg-white rounded-lg overflow-hidden shadow-2xl relative">
+        <div class="w-full flex-1 bg-slate-900 rounded-xl overflow-hidden shadow-2xl relative border border-slate-800">
             <iframe id="pdf-frame" src="" class="w-full h-full border-0"></iframe>
-        </div>
-
-        <div class="text-center text-slate-400 text-xs pt-1">
-            Zoom-In / Zoom-Out aur Fullscreen ke liye reader controls ka use karein.
         </div>
     </div>
 
-    <!-- JavaScript Application Logic -->
+    <!-- JavaScript Logic -->
     <script>
+        // 🚨 Yahan apna Google Apps Script URL paste karein
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyStz56XZLt9M_dCRxDdzmeAY4ws_iEiiq3Kjldm2c6uN69uRtUCvrTTmnTdUC8hvHj/exec";
 
-        let sheetData = [];
+        let currentData = [];
+        let activeTab = "Sheet1";
 
-        // 1. Fetch JSON Data from Apps Script
-        async function fetchSheetData() {
+        // Fetch Data from Apps Script
+        async function fetchLibraryData(sheetName) {
+            document.getElementById('loader').classList.remove('hidden');
+            document.getElementById('books-grid').classList.add('hidden');
+            document.getElementById('no-results').classList.add('hidden');
+
             try {
-                const response = await fetch(SCRIPT_URL);
-                sheetData = await response.json();
+                const response = await fetch(`${SCRIPT_URL}?sheet=${sheetName}`);
+                currentData = await response.json();
                 
-                document.getElementById('data-loader').classList.add('hidden');
-                populateClassDropdown();
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('books-grid').classList.remove('hidden');
+                
+                renderBooks(currentData);
             } catch (error) {
-                console.error("Data fetch error:", error);
-                document.getElementById('data-loader').innerText = "⚠️ Data load karne me samasya aayi. Page refresh karein.";
+                console.error("Data Fetching Error:", error);
+                document.getElementById('loader').innerHTML = `<p class="text-red-400">⚠️ Data load nahi ho saka. Sheet Script check karein.</p>`;
             }
         }
 
-        // 2. Populate Class Dropdown dynamically
-        function populateClassDropdown() {
-            const classSelect = document.getElementById('class-select');
-            const classes = [...new Set(sheetData.map(item => item.class))].filter(Boolean);
-            
-            classes.forEach(cls => {
-                classSelect.innerHTML += `<option value="${cls}">Class ${cls}</option>`;
-            });
-        }
+        // Render Cards
+        function renderBooks(data) {
+            const grid = document.getElementById('books-grid');
+            grid.innerHTML = '';
 
-        // 3. Handle Class Selection
-        function onClassChange() {
-            const cls = document.getElementById('class-select').value;
-            const subjectSelect = document.getElementById('subject-select');
-            const bookSelect = document.getElementById('book-select');
-            
-            subjectSelect.innerHTML = '<option value="">-- Choose Subject --</option>';
-            bookSelect.innerHTML = '<option value="">-- Choose Book Title --</option>';
-            bookSelect.disabled = true;
-            document.getElementById('chapters-card').classList.add('hidden');
-
-            if (cls) {
-                subjectSelect.disabled = false;
-                const filtered = sheetData.filter(item => item.class === cls);
-                const subjects = [...new Set(filtered.map(item => item.subject))].filter(Boolean);
-                
-                subjects.forEach(sub => {
-                    subjectSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
-                });
-            } else {
-                subjectSelect.disabled = true;
+            if(!data || data.length === 0) {
+                document.getElementById('no-results').classList.remove('hidden');
+                return;
             }
-        }
 
-        // 4. Handle Subject Selection
-        function onSubjectChange() {
-            const cls = document.getElementById('class-select').value;
-            const sub = document.getElementById('subject-select').value;
-            const bookSelect = document.getElementById('book-select');
-            
-            bookSelect.innerHTML = '<option value="">-- Choose Book Title --</option>';
-            document.getElementById('chapters-card').classList.add('hidden');
+            data.forEach(item => {
+                const title = item.chapter || item.book_name || "NCERT Resource";
+                const subject = item.subject || "General";
+                const driveLink = item.drive_link || "";
 
-            if (cls && sub) {
-                bookSelect.disabled = false;
-                const filtered = sheetData.filter(item => item.class === cls && item.subject === sub);
-                const books = [...new Set(filtered.map(item => item.book_name))].filter(Boolean);
-                
-                books.forEach(bk => {
-                    bookSelect.innerHTML += `<option value="${bk}">${bk}</option>`;
-                });
-            } else {
-                bookSelect.disabled = true;
-            }
-        }
-
-        // 5. Render Chapters List
-        function loadChapters() {
-            const cls = document.getElementById('class-select').value;
-            const sub = document.getElementById('subject-select').value;
-            const bk = document.getElementById('book-select').value;
-
-            const listContainer = document.getElementById('chapters-list');
-            listContainer.innerHTML = '';
-
-            if (cls && sub && bk) {
-                document.getElementById('chapters-card').classList.remove('hidden');
-                document.getElementById('book-title-heading').innerText = bk;
-
-                const filtered = sheetData.filter(item => item.class === cls && item.subject === sub && item.book_name === bk);
-
-                filtered.forEach(item => {
-                    listContainer.innerHTML += `
-                        <div class="flex items-center justify-between bg-slate-50 border p-3.5 rounded-lg hover:bg-indigo-50 transition">
-                            <span class="font-semibold text-slate-700">${item.chapter}</span>
-                            <button onclick="openSameTabViewer('${item.drive_link}', '${item.chapter}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm">
+                grid.innerHTML += `
+                    <div class="bg-slate-800/60 border border-slate-700/60 hover:border-indigo-500/50 rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 group">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                                    ${subject}
+                                </span>
+                                <span class="text-slate-500 text-xs">PDF File</span>
+                            </div>
+                            <h3 class="text-slate-100 font-bold text-base mb-2 group-hover:text-indigo-300 transition line-clamp-2">
+                                ${title}
+                            </h3>
+                        </div>
+                        
+                        <div class="mt-4 pt-4 border-t border-slate-700/40 flex items-center justify-between">
+                            <span class="text-xs text-slate-400">Ready to read</span>
+                            <button onclick="openBook('${driveLink}', '${title}')" 
+                                class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-md flex items-center gap-1.5">
                                 📖 Read Online
                             </button>
                         </div>
-                    `;
-                });
-            }
+                    </div>
+                `;
+            });
         }
 
-        // 6. Open Modal Reader (Original Stable Native Preview)
-        function openSameTabViewer(drivePreviewLink, chapterTitle) {
-            document.getElementById('pdf-modal').classList.remove('hidden');
-            document.getElementById('modal-chapter-title').innerText = chapterTitle;
+        // Switch Active Tab
+        function switchTab(sheetName) {
+            activeTab = sheetName;
             
+            // Tab styling update
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn px-5 py-2.5 rounded-t-lg font-semibold text-sm transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800";
+            });
+            const activeBtn = document.getElementById(`tab-${sheetName}`);
+            if(activeBtn) {
+                activeBtn.className = "tab-btn px-5 py-2.5 rounded-t-lg font-semibold text-sm transition flex items-center gap-2 bg-indigo-600 text-white shadow-lg";
+            }
+
+            fetchLibraryData(sheetName);
+        }
+
+        // Live Search Filter
+        function filterBooks() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const filtered = currentData.filter(item => {
+                const title = (item.chapter || item.book_name || "").toLowerCase();
+                const subject = (item.subject || "").toLowerCase();
+                return title.includes(query) || subject.includes(query);
+            });
+            renderBooks(filtered);
+        }
+
+        // Modal Handlers
+        function openBook(drivePreviewLink, title) {
+            document.getElementById('pdf-modal').classList.remove('hidden');
+            document.getElementById('modal-title').innerText = title;
+
             let rawUrl = drivePreviewLink.trim();
             const idMatch = rawUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
 
@@ -207,14 +198,13 @@
             }
         }
 
-        // 7. Close Modal Reader
-        function closePdfModal() {
+        function closeModal() {
             document.getElementById('pdf-modal').classList.add('hidden');
             document.getElementById('pdf-frame').src = '';
         }
 
-        // Initializer
-        fetchSheetData();
+        // Initial Load
+        fetchLibraryData('Sheet1');
     </script>
 </body>
 </html>
