@@ -35,41 +35,6 @@
       background-color: #3b82f6;
       color: #ffffff;
     }
-    /* Horizontal Book Flip Reader Layout */
-    .horizontal-book-container {
-      display: flex;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      gap: 1rem;
-      padding: 1rem;
-      height: 100%;
-      width: 100%;
-      align-items: center;
-      scroll-behavior: smooth;
-    }
-    .book-page-slide {
-      scroll-snap-align: center;
-      flex: 0 0 100%;
-      height: 100%;
-      background: #0b1120;
-      border-radius: 1rem;
-      border: 1px solid #1e293b;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-    /* Overlay to hide corner popout buttons */
-    .iframe-mask {
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 60px;
-      height: 60px;
-      z-index: 10;
-      pointer-events: auto;
-    }
   </style>
 </head>
 <body class="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
@@ -77,7 +42,7 @@
   <!-- Header & Controls -->
   <div class="flex items-center justify-between gap-4">
     <div class="flex items-center gap-3">
-      <button onclick="handleBack()" id="back-btn" class="w-11 h-11 rounded-2xl bg-slate-800 border border-slate-700 dark:bg-slate-800 flex items-center justify-center text-white hover:bg-slate-700 transition" style="display: none;">
+      <button onclick="handleBack()" id="back-btn" class="w-11 h-11 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-white hover:bg-slate-700 transition" style="display: none;">
         <i class="fa-solid fa-arrow-left text-sm"></i>
       </button>
       <a href="index.html" id="home-back-btn" class="w-11 h-11 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-white hover:bg-slate-700 transition">
@@ -152,27 +117,29 @@
     </div>
   </div>
 
-  <!-- PDF Horizontal Flip Viewer Modal -->
+  <!-- PDF Preview Modal with Fullscreen & Reader Layout -->
   <div id="pdfModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-2 md:p-6" style="display: none;">
-    <div class="bg-[#0f172a] border border-slate-800 w-full max-w-4xl h-[90vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl relative">
+    <div id="modalBox" class="bg-[#0f172a] border border-slate-800 w-full max-w-4xl h-[90vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl relative transition-all">
       <!-- Modal Header -->
-      <div class="flex items-center justify-between px-5 py-3 border-b border-slate-800 bg-slate-900/50">
+      <div class="flex items-center justify-between px-5 py-3 border-b border-slate-800 bg-slate-900/80">
         <div class="flex items-center gap-2">
           <i class="fa-solid fa-book-open-reader text-blue-400"></i>
-          <h3 id="modalTitle" class="font-bold text-sm text-white truncate max-w-[70vw]">PDF Reader</h3>
+          <h3 id="modalTitle" class="font-bold text-sm text-white truncate max-w-[60vw]">PDF Reader</h3>
         </div>
-        <div class="flex items-center gap-3">
-          <span class="text-[11px] text-slate-400 hidden sm:inline">📖 Swipe horizontally like a book</span>
+        <div class="flex items-center gap-2">
+          <!-- Fullscreen Button -->
+          <button onclick="toggleFullScreen()" title="Full Screen" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center justify-center transition">
+            <i class="fa-solid fa-expand text-xs" id="fsIcon"></i>
+          </button>
+          <!-- Close Modal Button -->
           <button onclick="closePdfModal()" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center justify-center transition">
             <i class="fa-solid fa-xmark text-sm"></i>
           </button>
         </div>
       </div>
-      <!-- Horizontal Panning Reader Body -->
-      <div class="flex-1 bg-slate-950 relative overflow-hidden">
-        <div id="horizontalSlider" class="horizontal-book-container">
-          <!-- Dynamically injected book pages -->
-        </div>
+      <!-- Reader Body -->
+      <div class="flex-1 bg-slate-950 relative overflow-hidden flex flex-col">
+        <iframe id="pdfIframe" src="" class="w-full h-full border-0"></iframe>
       </div>
     </div>
   </div>
@@ -432,7 +399,7 @@
       document.getElementById('fav-count').innerText = favorites.length;
     }
 
-    // Horizontal Book Flip Preview Modal with Masking to hide corner buttons
+    // Open PDF Modal Viewer
     function openPdfModal(title, link) {
       let previewLink = link;
       if (link.includes('drive.google.com')) {
@@ -444,21 +411,34 @@
       }
 
       document.getElementById('modalTitle').innerText = title;
-      
-      const slider = document.getElementById('horizontalSlider');
-      slider.innerHTML = `
-        <div class="book-page-slide">
-          <div class="iframe-mask" title="Protected View"></div>
-          <iframe src="${previewLink}" class="w-full h-full border-0"></iframe>
-        </div>
-      `;
-
+      document.getElementById('pdfIframe').src = previewLink;
       document.getElementById('pdfModal').style.display = 'flex';
     }
 
     function closePdfModal() {
       document.getElementById('pdfModal').style.display = 'none';
-      document.getElementById('horizontalSlider').innerHTML = '';
+      document.getElementById('pdfIframe').src = '';
+      // Exit fullscreen if active
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+        document.getElementById('fsIcon').className = "fa-solid fa-expand text-xs";
+      }
+    }
+
+    // Full Screen Toggle Function
+    function toggleFullScreen() {
+      const modalBox = document.getElementById('modalBox');
+      const fsIcon = document.getElementById('fsIcon');
+      
+      if (!document.fullscreenElement) {
+        modalBox.requestFullscreen().catch(err => {
+          alert(err.message);
+        });
+        fsIcon.className = "fa-solid fa-compress text-xs";
+      } else {
+        document.exitFullscreen();
+        fsIcon.className = "fa-solid fa-expand text-xs";
+      }
     }
 
     function handleSearch() {
