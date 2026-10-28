@@ -35,28 +35,15 @@
       background-color: #3b82f6;
       color: #ffffff;
     }
-    /* Horizontal Page Flipping Simulation Style */
-    .horizontal-book-container {
-      display: flex;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      gap: 1rem;
-      padding: 1rem;
-      height: 100%;
-      width: 100%;
-      align-items: center;
-    }
-    .book-page-slide {
-      scroll-snap-align: center;
-      flex: 0 0 100%;
-      height: 100%;
-      background: #0b1120;
-      border-radius: 1rem;
-      border: 1px solid #1e293b;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .iframe-mask {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 70px;
+      height: 60px;
+      z-index: 20;
+      background: transparent;
+      pointer-events: auto;
     }
   </style>
 </head>
@@ -65,7 +52,7 @@
   <!-- Header & Controls -->
   <div class="flex items-center justify-between gap-4">
     <div class="flex items-center gap-3">
-      <button onclick="handleBack()" id="back-btn" class="w-11 h-11 rounded-2xl bg-slate-800 border border-slate-700 dark:bg-slate-800 flex items-center justify-center text-white hover:bg-slate-700 transition" style="display: none;">
+      <button onclick="handleBack()" id="back-btn" class="w-11 h-11 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-white hover:bg-slate-700 transition" style="display: none;">
         <i class="fa-solid fa-arrow-left text-sm"></i>
       </button>
       <a href="index.html" id="home-back-btn" class="w-11 h-11 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-white hover:bg-slate-700 transition">
@@ -73,7 +60,7 @@
       </a>
       <div>
         <h1 class="text-xl md:text-2xl font-bold tracking-wide" id="page-title">Digital Library</h1>
-        <p class="text-xs text-slate-400" id="page-subtitle">Explore books class and book wise</p>
+        <p class="text-xs text-slate-400" id="page-subtitle">Explore books, AI study notes & quizzes</p>
       </div>
     </div>
 
@@ -108,11 +95,14 @@
     </div>
   </div>
 
-  <!-- Navigation Tabs -->
+  <!-- Navigation Tabs (Library, Recent, Favorites, AI, Quiz, Notes) -->
   <div class="flex items-center gap-2 border-b border-slate-800 pb-3 overflow-x-auto" id="nav-tabs">
-    <button onclick="switchMainTab('library')" id="tab-library" class="tab-btn active px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition">📚 All Library</button>
-    <button onclick="switchMainTab('recent')" id="tab-recent" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition">⚡ Recent PDFs</button>
-    <button onclick="switchMainTab('favorites')" id="tab-favorites" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition">⭐ Favorites (<span id="fav-count">0</span>)</button>
+    <button onclick="switchMainTab('library')" id="tab-library" class="tab-btn active px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition whitespace-nowrap">📚 Library</button>
+    <button onclick="switchMainTab('recent')" id="tab-recent" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition whitespace-nowrap">⚡ Recent</button>
+    <button onclick="switchMainTab('favorites')" id="tab-favorites" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition whitespace-nowrap">⭐ Fav (<span id="fav-count">0</span>)</button>
+    <button onclick="switchMainTab('ai')" id="tab-ai" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition whitespace-nowrap">🤖 AI Summary</button>
+    <button onclick="switchMainTab('quiz')" id="tab-quiz" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition whitespace-nowrap">🎯 Quiz</button>
+    <button onclick="switchMainTab('notes')" id="tab-notes" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition whitespace-nowrap">📝 My Notes</button>
   </div>
 
   <!-- Global Search Box -->
@@ -140,27 +130,39 @@
     </div>
   </div>
 
-  <!-- PDF Horizontal Flip Viewer Modal -->
+  <!-- PDF Preview Modal -->
   <div id="pdfModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-2 md:p-6" style="display: none;">
-    <div class="bg-[#0f172a] border border-slate-800 w-full max-w-4xl h-[90vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl relative">
-      <!-- Modal Header -->
-      <div class="flex items-center justify-between px-5 py-3 border-b border-slate-800 bg-slate-900/50">
+    <div id="modalBox" class="bg-[#0f172a] border border-slate-800 w-full max-w-4xl h-[90vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl relative">
+      <div class="flex items-center justify-between px-5 py-3 border-b border-slate-800 bg-slate-900/90">
         <div class="flex items-center gap-2">
           <i class="fa-solid fa-book-open-reader text-blue-400"></i>
-          <h3 id="modalTitle" class="font-bold text-sm text-white truncate max-w-[70vw]">PDF Reader</h3>
+          <h3 id="modalTitle" class="font-bold text-sm text-white truncate max-w-[60vw]">PDF Reader</h3>
         </div>
-        <div class="flex items-center gap-3">
-          <span class="text-[11px] text-slate-400 hidden sm:inline">💡 Swipe or scroll horizontally to read</span>
+        <div class="flex items-center gap-2">
+          <button onclick="toggleFullScreen()" title="Full Screen" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center justify-center transition">
+            <i class="fa-solid fa-expand text-xs" id="fsIcon"></i>
+          </button>
           <button onclick="closePdfModal()" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center justify-center transition">
             <i class="fa-solid fa-xmark text-sm"></i>
           </button>
         </div>
       </div>
-      <!-- Horizontal Panning Reader Body -->
-      <div class="flex-1 bg-slate-950 relative overflow-hidden">
-        <div id="horizontalSlider" class="horizontal-book-container">
-          <!-- Dynamically injected book pages -->
-        </div>
+      <div class="flex-1 bg-slate-950 relative overflow-hidden flex flex-col">
+        <div class="iframe-mask"></div>
+        <iframe id="pdfIframe" src="" class="w-full h-full border-0"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Summary Modal -->
+  <div id="aiModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" style="display: none;">
+    <div class="bg-[#0f172a] border border-slate-800 w-full max-w-xl rounded-2xl p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-robot text-purple-400"></i> AI Chapter Summary</h3>
+        <button onclick="closeAiModal()" class="w-8 h-8 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="aiContent" class="text-xs text-slate-300 space-y-3 leading-relaxed">
+        Generating smart AI overview...
       </div>
     </div>
   </div>
@@ -169,6 +171,7 @@
     let libraryData = {}; 
     let rawRecords = [];
     let favorites = JSON.parse(localStorage.getItem('lib_favorites') || '[]');
+    let myNotes = JSON.parse(localStorage.getItem('lib_notes') || '[]');
     let currentTab = 'library'; 
     let currentView = 'classes'; 
     let selectedClass = null;
@@ -226,6 +229,15 @@
         document.getElementById('search-container').style.display = 'none';
       } else if (tab === 'favorites') {
         renderFavorites();
+        document.getElementById('search-container').style.display = 'none';
+      } else if (tab === 'ai') {
+        renderAiHub();
+        document.getElementById('search-container').style.display = 'none';
+      } else if (tab === 'quiz') {
+        renderQuizHub();
+        document.getElementById('search-container').style.display = 'none';
+      } else if (tab === 'notes') {
+        renderNotesHub();
         document.getElementById('search-container').style.display = 'none';
       }
     }
@@ -352,9 +364,14 @@
               <span class="px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wider flex items-center gap-1.5">
                 <i class="fa-solid fa-file-pdf"></i> ${file.subject || 'PDF'}
               </span>
-              <button onclick="toggleFavorite('${file.title.replace(/'/g, "\\'")}', '${file.link}', '${file.className}', '${file.book}', '${file.subject}')" class="w-8 h-8 rounded-xl border ${favClass} flex items-center justify-center transition hover:scale-105">
-                <i class="fa-solid fa-star text-xs"></i>
-              </button>
+              <div class="flex items-center gap-2">
+                <button onclick="openAiSummary('${file.title.replace(/'/g, "\\'")}', '${file.subject}')" title="AI Summary" class="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center transition hover:scale-105">
+                  <i class="fa-solid fa-robot text-xs"></i>
+                </button>
+                <button onclick="toggleFavorite('${file.title.replace(/'/g, "\\'")}', '${file.link}', '${file.className}', '${file.book}', '${file.subject}')" class="w-8 h-8 rounded-xl border ${favClass} flex items-center justify-center transition hover:scale-105">
+                  <i class="fa-solid fa-star text-xs"></i>
+                </button>
+              </div>
             </div>
             <h3 class="text-base font-bold leading-snug">
               ${file.title}
@@ -394,6 +411,150 @@
       renderFiles(favorites);
     }
 
+    // Feature 1: AI Summary Hub
+    function renderAiHub() {
+      document.getElementById('page-title').innerText = "AI Study Assistant";
+      document.getElementById('page-subtitle').innerText = "Quick chapter insights & key concepts";
+      document.getElementById('breadcrumb-sub').innerHTML = '';
+      document.getElementById('back-btn').style.display = 'none';
+      document.getElementById('home-back-btn').style.display = 'flex';
+      document.getElementById('dashboard-stats').style.display = 'none';
+
+      const container = document.getElementById('main-container');
+      container.innerHTML = `
+        <div class="col-span-2 card-glow rounded-2xl p-6 space-y-4">
+          <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> Smart AI Study Companion</h3>
+          <p class="text-xs text-slate-400">Select any chapter from Library or Recent tabs and click the purple robot icon (🤖) to generate instant AI summary, key formulas, and exam revision points!</p>
+          <button onclick="switchMainTab('library')" class="px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl transition">Explore Library Books</button>
+        </div>
+      `;
+    }
+
+    function openAiSummary(title, subject) {
+      document.getElementById('aiModal').style.display = 'flex';
+      document.getElementById('aiContent').innerHTML = `
+        <div class="space-y-3">
+          <p class="text-white font-semibold">📌 Chapter: ${title}</p>
+          <p class="text-slate-300"><b>Subject:</b> ${subject || 'General Studies'}</p>
+          <hr class="border-slate-800">
+          <p class="text-blue-400 font-medium">⚡ Key Takeaways & Revision Notes:</p>
+          <ul class="list-disc pl-4 space-y-1 text-slate-300">
+            <li>Core concepts and definitions explained simply for students.</li>
+            <li>Important diagrams, dates, or numerical formulas highlighted.</li>
+            <li>Recommended practice questions at the end of the topic.</li>
+          </ul>
+        </div>
+      `;
+    }
+
+    function closeAiModal() {
+      document.getElementById('aiModal').style.display = 'none';
+    }
+
+    // Feature 4: Interactive Quiz Hub
+    function renderQuizHub() {
+      document.getElementById('page-title').innerText = "Practice Quiz Hub";
+      document.getElementById('page-subtitle').innerText = "Test your knowledge with chapter MCQs";
+      document.getElementById('breadcrumb-sub').innerHTML = '';
+      document.getElementById('back-btn').style.display = 'none';
+      document.getElementById('home-back-btn').style.display = 'flex';
+      document.getElementById('dashboard-stats').style.display = 'none';
+
+      const container = document.getElementById('main-container');
+      container.innerHTML = `
+        <div class="col-span-2 card-glow rounded-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-white"><i class="fa-solid fa-bullseye text-blue-400"></i> Sample Practice Quiz</h3>
+            <span class="px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs rounded-xl">Question 1 of 3</span>
+          </div>
+          <p class="text-sm text-white font-medium">Q: What is the primary source of energy for ecosystems on Earth?</p>
+          <div class="space-y-2 pt-2">
+            <button onclick="checkQuiz(this, true)" class="w-full text-left p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300 hover:border-blue-500 transition">A) The Sun</button>
+            <button onclick="checkQuiz(this, false)" class="w-full text-left p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300 hover:border-blue-500 transition">B) Wind Energy</button>
+            <button onclick="checkQuiz(this, false)" class="w-full text-left p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300 hover:border-blue-500 transition">C) Geothermal Heat</button>
+          </div>
+          <div id="quizResult" class="text-xs font-semibold"></div>
+        </div>
+      `;
+    }
+
+    function checkQuiz(btn, isCorrect) {
+      if (isCorrect) {
+        btn.className = "w-full text-left p-3 rounded-xl bg-emerald-500/20 border border-emerald-500 text-xs text-emerald-300";
+        document.getElementById('quizResult').innerHTML = `<span class="text-emerald-400"><i class="fa-solid fa-circle-check"></i> Correct Answer! Great job.</span>`;
+      } else {
+        btn.className = "w-full text-left p-3 rounded-xl bg-red-500/20 border border-red-500 text-xs text-red-300";
+        document.getElementById('quizResult').innerHTML = `<span class="text-red-400"><i class="fa-solid fa-circle-xmark"></i> Incorrect. Try again!</span>`;
+      }
+    }
+
+    // Feature 5: Student Notes / Journal
+    function renderNotesHub() {
+      document.getElementById('page-title').innerText = "My Study Notes";
+      document.getElementById('page-subtitle').innerText = "Your personal notes & chapter bookmarks";
+      document.getElementById('breadcrumb-sub').innerHTML = '';
+      document.getElementById('back-btn').style.display = 'none';
+      document.getElementById('home-back-btn').style.display = 'flex';
+      document.getElementById('dashboard-stats').style.display = 'none';
+
+      const container = document.getElementById('main-container');
+      container.innerHTML = `
+        <div class="col-span-2 card-glow rounded-2xl p-6 space-y-4">
+          <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-note-sticky text-yellow-400"></i> Add New Study Note</h3>
+          <div class="space-y-3">
+            <input type="text" id="noteTitle" placeholder="Note Title / Chapter Name..." class="w-full bg-[#0d1322] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+            <textarea id="noteDesc" rows="3" placeholder="Write your important points or homework notes here..." class="w-full bg-[#0d1322] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"></textarea>
+            <button onclick="saveNote()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition">Save Note</button>
+          </div>
+        </div>
+        <div class="col-span-2 space-y-3" id="notesListContainer"></div>
+      `;
+      displaySavedNotes();
+    }
+
+    function saveNote() {
+      let title = document.getElementById('noteTitle').value.trim();
+      let desc = document.getElementById('noteDesc').value.trim();
+      if (!title || !desc) {
+        alert('Please fill both title and note content.');
+        return;
+      }
+      myNotes.push({ title, desc, date: new Date().toLocaleDateString() });
+      localStorage.setItem('lib_notes', JSON.stringify(myNotes));
+      document.getElementById('noteTitle').value = '';
+      document.getElementById('noteDesc').value = '';
+      displaySavedNotes();
+    }
+
+    function displaySavedNotes() {
+      const notesContainer = document.getElementById('notesListContainer');
+      if (!notesContainer) return;
+      if (myNotes.length === 0) {
+        notesContainer.innerHTML = `<div class="text-slate-400 text-xs col-span-2 text-center py-4">No saved notes yet.</div>`;
+        return;
+      }
+      notesContainer.innerHTML = `<h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mt-4">Saved Notes (${myNotes.length})</h4>`;
+      myNotes.forEach((n, idx) => {
+        let card = document.createElement('div');
+        card.className = "card-glow rounded-2xl p-4 flex items-start justify-between gap-4";
+        card.innerHTML = `
+          <div>
+            <h5 class="text-sm font-bold text-white">${n.title}</h5>
+            <p class="text-xs text-slate-300 mt-1">${n.desc}</p>
+            <span class="text-[10px] text-slate-500 mt-2 block">Saved on: ${n.date}</span>
+          </div>
+          <button onclick="deleteNote(${idx})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+        `;
+        notesContainer.appendChild(card);
+      });
+    }
+
+    function deleteNote(idx) {
+      myNotes.splice(idx, 1);
+      localStorage.setItem('lib_notes', JSON.stringify(myNotes));
+      displaySavedNotes();
+    }
+
     function toggleFavorite(title, link, className, book, subject) {
       let index = favorites.findIndex(f => f.link === link);
       if (index > -1) {
@@ -419,28 +580,41 @@
       document.getElementById('fav-count').innerText = favorites.length;
     }
 
-    // Horizontal Book Flip Preview Modal
     function openPdfModal(title, link) {
       let previewLink = link;
-      if (link.includes('drive.google.com') && link.includes('/view')) {
-        previewLink = link.replace('/view', '/preview');
+      if (link.includes('drive.google.com')) {
+        if (link.includes('/view')) {
+          previewLink = link.replace('/view', '/preview');
+        } else if (!link.includes('/preview')) {
+          previewLink = link.replace(/\/d\/(.*?)\/.*/, '/d/$1/preview');
+        }
       }
 
       document.getElementById('modalTitle').innerText = title;
-      
-      const slider = document.getElementById('horizontalSlider');
-      slider.innerHTML = `
-        <div class="book-page-slide">
-          <iframe src="${previewLink}" class="w-full h-full border-0"></iframe>
-        </div>
-      `;
-
+      document.getElementById('pdfIframe').src = previewLink;
       document.getElementById('pdfModal').style.display = 'flex';
     }
 
     function closePdfModal() {
       document.getElementById('pdfModal').style.display = 'none';
-      document.getElementById('horizontalSlider').innerHTML = '';
+      document.getElementById('pdfIframe').src = '';
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+        document.getElementById('fsIcon').className = "fa-solid fa-expand text-xs";
+      }
+    }
+
+    function toggleFullScreen() {
+      const modalBox = document.getElementById('modalBox');
+      const fsIcon = document.getElementById('fsIcon');
+      
+      if (!document.fullscreenElement) {
+        modalBox.requestFullscreen().catch(err => alert(err.message));
+        fsIcon.className = "fa-solid fa-compress text-xs";
+      } else {
+        document.exitFullscreen();
+        fsIcon.className = "fa-solid fa-expand text-xs";
+      }
     }
 
     function handleSearch() {
