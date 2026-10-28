@@ -35,6 +35,29 @@
       background-color: #3b82f6;
       color: #ffffff;
     }
+    /* Horizontal Page Flipping Simulation Style */
+    .horizontal-book-container {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      gap: 1rem;
+      padding: 1rem;
+      height: 100%;
+      width: 100%;
+      align-items: center;
+    }
+    .book-page-slide {
+      scroll-snap-align: center;
+      flex: 0 0 100%;
+      height: 100%;
+      background: #0b1120;
+      border-radius: 1rem;
+      border: 1px solid #1e293b;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
 </head>
 <body class="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
@@ -85,7 +108,7 @@
     </div>
   </div>
 
-  <!-- Navigation Tabs (All Books, Recent, Favorites) -->
+  <!-- Navigation Tabs -->
   <div class="flex items-center gap-2 border-b border-slate-800 pb-3 overflow-x-auto" id="nav-tabs">
     <button onclick="switchMainTab('library')" id="tab-library" class="tab-btn active px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition">📚 All Library</button>
     <button onclick="switchMainTab('recent')" id="tab-recent" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition">⚡ Recent PDFs</button>
@@ -117,22 +140,27 @@
     </div>
   </div>
 
-  <!-- PDF Viewer Modal -->
-  <div id="pdfModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" style="display: none;">
-    <div class="bg-[#0f172a] border border-slate-800 w-full max-w-3xl h-[85vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl">
-      <div class="flex items-center justify-between px-5 py-4 border-b border-slate-800">
-        <h3 id="modalTitle" class="font-bold text-sm text-white truncate max-w-[80%]">PDF Viewer</h3>
+  <!-- PDF Horizontal Flip Viewer Modal -->
+  <div id="pdfModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-2 md:p-6" style="display: none;">
+    <div class="bg-[#0f172a] border border-slate-800 w-full max-w-4xl h-[90vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl relative">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between px-5 py-3 border-b border-slate-800 bg-slate-900/50">
         <div class="flex items-center gap-2">
-          <a id="modalDownload" href="#" target="_blank" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5">
-            <i class="fa-solid fa-download"></i> Download
-          </a>
-          <button onclick="closePdfModal()" class="w-8 h-8 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center justify-center transition">
-            <i class="fa-solid fa-xmark"></i>
+          <i class="fa-solid fa-book-open-reader text-blue-400"></i>
+          <h3 id="modalTitle" class="font-bold text-sm text-white truncate max-w-[70vw]">PDF Reader</h3>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-[11px] text-slate-400 hidden sm:inline">💡 Swipe or scroll horizontally to read</span>
+          <button onclick="closePdfModal()" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center justify-center transition">
+            <i class="fa-solid fa-xmark text-sm"></i>
           </button>
         </div>
       </div>
-      <div class="flex-1 bg-slate-950 p-2">
-        <iframe id="pdfIframe" src="" class="w-full h-full rounded-xl border border-slate-800"></iframe>
+      <!-- Horizontal Panning Reader Body -->
+      <div class="flex-1 bg-slate-950 relative overflow-hidden">
+        <div id="horizontalSlider" class="horizontal-book-container">
+          <!-- Dynamically injected book pages -->
+        </div>
       </div>
     </div>
   </div>
@@ -141,8 +169,8 @@
     let libraryData = {}; 
     let rawRecords = [];
     let favorites = JSON.parse(localStorage.getItem('lib_favorites') || '[]');
-    let currentTab = 'library'; // 'library', 'recent', 'favorites'
-    let currentView = 'classes'; // 'classes', 'books', 'files', 'search'
+    let currentTab = 'library'; 
+    let currentView = 'classes'; 
     let selectedClass = null;
     let selectedBook = null;
 
@@ -172,7 +200,6 @@
           booksSet.add(book);
         });
 
-        // Dashboard stats update
         document.getElementById('stat-pdfs').innerText = rawRecords.length;
         document.getElementById('stat-classes').innerText = Object.keys(libraryData).length;
         document.getElementById('stat-books').innerText = booksSet.size;
@@ -203,7 +230,6 @@
       }
     }
 
-    // Step 1: Render Classes
     function renderClasses() {
       currentView = 'classes';
       selectedClass = null;
@@ -237,7 +263,7 @@
               🎓
             </div>
             <div>
-              <h3 class="font-bold text-base group-hover:text-blue-400 transition">${cls}</h3>
+              <h3 class="font-bold base group-hover:text-blue-400 transition">${cls}</h3>
               <p class="text-xs text-slate-400 mt-0.5">${totalBooks} Books Available</p>
             </div>
           </div>
@@ -249,7 +275,6 @@
       });
     }
 
-    // Step 2: Render Books inside a Class
     function selectClass(cls) {
       currentView = 'books';
       selectedClass = cls;
@@ -279,7 +304,7 @@
               📚
             </div>
             <div>
-              <h3 class="font-bold text-base group-hover:text-purple-400 transition">${book}</h3>
+              <h3 class="font-bold base group-hover:text-purple-400 transition">${book}</h3>
               <p class="text-xs text-slate-400 mt-0.5">${itemCount} Chapters / Files</p>
             </div>
           </div>
@@ -291,7 +316,6 @@
       });
     }
 
-    // Step 3: Render Files inside a Book
     function selectBook(book) {
       currentView = 'files';
       selectedBook = book;
@@ -306,7 +330,6 @@
       renderFiles(libraryData[selectedClass][book]);
     }
 
-    // Render File Cards with Preview & Favorite toggle
     function renderFiles(files) {
       const container = document.getElementById('main-container');
       container.innerHTML = '';
@@ -338,20 +361,16 @@
             </h3>
             <p class="text-[11px] text-slate-400 mt-1">${file.className} • ${file.book}</p>
           </div>
-          <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800/60">
-            <button onclick="openPdfModal('${file.title.replace(/'/g, "\\'")}', '${file.link}')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5">
+          <div class="flex items-center justify-end pt-3 border-t border-slate-800/60">
+            <button onclick="openPdfModal('${file.title.replace(/'/g, "\\'")}', '${file.link}')" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2">
               <i class="fa-solid fa-eye"></i> Preview
             </button>
-            <a href="${file.link}" target="_blank" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-indigo-600/30 flex items-center gap-2">
-              <i class="fa-solid fa-book-open"></i> Open PDF
-            </a>
           </div>
         `;
         container.appendChild(card);
       });
     }
 
-    // Recent PDFs Tab
     function renderRecentPdfs() {
       document.getElementById('page-title').innerText = "Recent PDFs";
       document.getElementById('page-subtitle').innerText = "Latest added study materials";
@@ -360,12 +379,10 @@
       document.getElementById('home-back-btn').style.display = 'flex';
       document.getElementById('dashboard-stats').style.display = 'none';
 
-      // Last 10 records as recent
       let recent = [...rawRecords].slice(-10).reverse();
       renderFiles(recent);
     }
 
-    // Favorites Tab
     function renderFavorites() {
       document.getElementById('page-title').innerText = "Favorite Books";
       document.getElementById('page-subtitle').innerText = "Your bookmarked chapters and notes";
@@ -387,7 +404,6 @@
       localStorage.setItem('lib_favorites', JSON.stringify(favorites));
       updateFavCount();
 
-      // Refresh current view
       if (currentTab === 'favorites') {
         renderFavorites();
       } else if (currentTab === 'recent') {
@@ -403,24 +419,30 @@
       document.getElementById('fav-count').innerText = favorites.length;
     }
 
-    // Built-in PDF Modal Reader
+    // Horizontal Book Flip Preview Modal
     function openPdfModal(title, link) {
       let previewLink = link;
       if (link.includes('drive.google.com') && link.includes('/view')) {
         previewLink = link.replace('/view', '/preview');
       }
+
       document.getElementById('modalTitle').innerText = title;
-      document.getElementById('modalDownload').href = link;
-      document.getElementById('pdfIframe').src = previewLink;
+      
+      const slider = document.getElementById('horizontalSlider');
+      slider.innerHTML = `
+        <div class="book-page-slide">
+          <iframe src="${previewLink}" class="w-full h-full border-0"></iframe>
+        </div>
+      `;
+
       document.getElementById('pdfModal').style.display = 'flex';
     }
 
     function closePdfModal() {
       document.getElementById('pdfModal').style.display = 'none';
-      document.getElementById('pdfIframe').src = '';
+      document.getElementById('horizontalSlider').innerHTML = '';
     }
 
-    // Search Handler
     function handleSearch() {
       if (currentTab !== 'library') return;
       const query = document.getElementById('globalSearch').value.toLowerCase().trim();
@@ -449,7 +471,6 @@
       renderFiles(matched);
     }
 
-    // Theme Toggle Function
     function toggleTheme() {
       document.body.classList.toggle('light-mode');
     }
