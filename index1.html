@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Google Drive Folders - Barsoi Public School</title>
+  <title>Folders & Resources - Barsoi Public School</title>
   <!-- Tailwind CSS & FontAwesome -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -29,75 +29,207 @@
 </head>
 <body class="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
 
-  <!-- Header with Back Button -->
-  <div class="flex items-center justify-between">
+  <!-- Header & Back Button -->
+  <div class="flex items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <a href="index.html" class="w-11 h-11 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-white hover:bg-slate-700 transition">
         <i class="fa-solid fa-arrow-left text-sm"></i>
       </a>
       <div>
-        <h1 class="text-2xl font-bold text-white tracking-wide">Google Drive Folders</h1>
-        <p class="text-xs text-slate-400">Barsoi Public School • Sub-folders & Resources</p>
+        <h1 class="text-xl md:text-2xl font-bold text-white tracking-wide" id="page-title">Google Drive Folders</h1>
+        <p class="text-xs text-slate-400" id="page-subtitle">Browse subjects and class folders</p>
       </div>
+    </div>
+
+    <!-- Search Box inside folders page -->
+    <div class="relative w-48 md:w-64" id="search-box-container" style="display: none;">
+      <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+      <input 
+        type="text" 
+        id="folderSearch" 
+        oninput="filterFolderFiles()"
+        placeholder="Search files..." 
+        class="w-full bg-[#0d1322] border border-blue-900/60 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 transition"
+      />
     </div>
   </div>
 
-  <!-- Main Drive Folder Link Card -->
-  <a href="https://drive.google.com/drive/folders/0B6bIm9hct1oFTkRxd2prWUpwOEU?resourcekey=0-rPEKQ0KpKt5bcc0NVKkt5A" target="_blank" class="block group">
-    <div class="card-dark rounded-2xl p-5 border border-amber-500/40 bg-amber-500/5 flex items-center justify-between hover:border-amber-400 transition cursor-pointer">
-      <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-2xl">
-          📂
-        </div>
-        <div>
-          <h3 class="font-bold text-white text-base group-hover:text-amber-400 transition">Main Google Drive Folder</h3>
-          <p class="text-xs text-slate-400 mt-0.5">Open main shared folder in Google Drive</p>
-        </div>
-      </div>
-      <span class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold rounded-xl transition flex items-center gap-2">
-        Open <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-      </span>
-    </div>
-  </a>
-
-  <!-- Sub-Folders Grid (Yahan aap apne sub-folders ke links add kar sakte hain) -->
-  <h2 class="text-lg font-bold text-white pt-2">Sub-Folders List</h2>
-  
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    
-    <!-- Sub-Folder Card Example 1 -->
-    <a href="https://drive.google.com/drive/folders/0B6bIm9hct1oFRkstR2hxMUR5SE0?resourcekey=0-k2-X2gtedIBmOfYwIY1D7Q" target="_blank" class="card-glow rounded-2xl p-5 border border-slate-800 flex items-center justify-between transition cursor-pointer">
-      <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center text-2xl">
-          📁
-        </div>
-        <div>
-          <h3 class="font-bold text-white text-base">Class 10th Notes</h3>
-          <p class="text-xs text-slate-400 mt-0.5">Sub-folder contents</p>
-        </div>
-      </div>
-      <span class="text-xs text-blue-400 font-semibold flex items-center gap-1">
-        Explore <i class="fa-solid fa-arrow-right"></i>
-      </span>
-    </a>
-
-    <!-- Sub-Folder Card Example 2 -->
-    <a href="https://drive.google.com/drive/folders/0B6bIm9hct1oFM1lPN1pmUFZuVUE?resourcekey=0-R5FSXKXTSZ0GtrUCA8djuA" target="_blank" class="card-glow rounded-2xl p-5 border border-slate-800 flex items-center justify-between transition cursor-pointer">
-      <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center text-2xl">
-          📁
-        </div>
-        <div>
-          <h3 class="font-bold text-white text-base">Science Assignments</h3>
-          <p class="text-xs text-slate-400 mt-0.5">Sub-folder contents</p>
-        </div>
-      </div>
-      <span class="text-xs text-blue-400 font-semibold flex items-center gap-1">
-        Explore <i class="fa-solid fa-arrow-right"></i>
-      </span>
-    </a>
-
+  <!-- Breadcrumb / Navigation helper -->
+  <div id="breadcrumb" class="text-xs text-slate-400 flex items-center gap-2">
+    <span class="text-blue-400 cursor-pointer hover:underline" onclick="showFolderView()">All Folders</span>
+    <span id="breadcrumb-current"></span>
   </div>
 
+  <!-- Container for Folders or Files Grid -->
+  <div id="main-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="text-slate-400 text-sm col-span-2 text-center py-10">
+      <i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading folders from Google Sheet...
+    </div>
+  </div>
+
+  <!-- JavaScript Logic -->
+  <script>
+    let allSheetData = [];
+    let groupedFolders = {};
+    let currentSelectedFolder = null;
+
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx3xVmlskgXDm355oNXZ90GL-ry3bgIovPUEYtKFEUZEDXGhlVgRcBj-4E5DyMIA5pn/exec";
+
+    async function fetchSheetData() {
+      try {
+        const response = await fetch(WEB_APP_URL);
+        const data = await response.json();
+        allSheetData = data;
+        processFolders(data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        document.getElementById('main-container').innerHTML = `<div class="text-red-400 text-sm col-span-2 text-center py-10">Data load karne me problem aayi. Kripya connection check karein.</div>`;
+      }
+    }
+
+    function processFolders(data) {
+      groupedFolders = {};
+
+      data.forEach((row, index) => {
+        const itemClass = row[0] ? String(row[0]).trim() : 'General';
+        const subject   = row[1] ? String(row[1]).trim() : 'Uncategorized';
+        const title     = row[2] ? String(row[2]).trim() : 'Untitled';
+        const type      = row[3] ? String(row[3]).trim() : 'PDF';
+        const link      = row[4] ? String(row[4]).trim() : '#';
+
+        // Folder key banate hain jaise "Biology (Class 12)"
+        const folderKey = `${subject} - Class ${itemClass}`;
+
+        if (!groupedFolders[folderKey]) {
+          groupedFolders[folderKey] = {
+            subject: subject,
+            itemClass: itemClass,
+            files: []
+          };
+        }
+
+        groupedFolders[folderKey].files.push({ title, type, link, index });
+      });
+
+      showFolderView();
+    }
+
+    function showFolderView() {
+      currentSelectedFolder = null;
+      document.getElementById('page-title').innerText = "Google Drive Folders";
+      document.getElementById('page-subtitle').innerText = "Select a subject folder to view contents";
+      document.getElementById('breadcrumb-current').innerHTML = '';
+      document.getElementById('search-box-container').style.display = 'none';
+
+      const container = document.getElementById('main-container');
+      container.innerHTML = '';
+
+      const folderKeys = Object.keys(groupedFolders);
+
+      if (folderKeys.length === 0) {
+        container.innerHTML = `<div class="text-slate-400 text-sm col-span-2 text-center py-10">Koi folder data nahi mila.</div>`;
+        return;
+      }
+
+      folderKeys.forEach(folderKey => {
+        const folder = groupedFolders[folderKey];
+        const fileCount = folder.files.length;
+
+        const card = document.createElement('div');
+        card.className = "card-glow rounded-2xl p-5 border border-slate-800 flex items-center justify-between cursor-pointer group";
+        card.onclick = () => openFolder(folderKey);
+
+        card.innerHTML = `
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center text-2xl group-hover:scale-105 transition">
+              📁
+            </div>
+            <div>
+              <h3 class="font-bold text-white text-base group-hover:text-blue-400 transition">${folderKey}</h3>
+              <p class="text-xs text-slate-400 mt-0.5">${fileCount} items inside</p>
+            </div>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition">
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function openFolder(folderKey) {
+      currentSelectedFolder = folderKey;
+      const folder = groupedFolders[folderKey];
+
+      document.getElementById('page-title').innerText = folderKey;
+      document.getElementById('page-subtitle').innerText = `Showing all files inside ${folderKey}`;
+      document.getElementById('breadcrumb-current').innerHTML = ` <i class="fa-solid fa-chevron-right text-[10px] mx-1"></i> <span class="text-white">${folderKey}</span>`;
+      document.getElementById('search-box-container').style.display = 'block';
+      document.getElementById('folderSearch').value = '';
+
+      renderFolderFiles(folder.files);
+    }
+
+    function renderFolderFiles(files) {
+      const container = document.getElementById('main-container');
+      container.innerHTML = '';
+
+      if (files.length === 0) {
+        container.innerHTML = `<div class="text-slate-400 text-sm col-span-2 text-center py-10">Is folder me koi file nahi hai.</div>`;
+        return;
+      }
+
+      files.forEach(file => {
+        const typeLower = file.type.toLowerCase();
+        let btnText = "Open PDF";
+        let iconClass = "fa-file-pdf";
+        let btnIcon = "fa-book-open";
+
+        if (typeLower.includes("video") || typeLower.includes("lecture")) {
+          btnText = "Watch Video";
+          iconClass = "fa-video";
+          btnIcon = "fa-play";
+        } else if (typeLower.includes("assignment")) {
+          btnText = "Open Assignment";
+          iconClass = "fa-pen-to-square";
+          btnIcon = "fa-arrow-up-right-from-square";
+        }
+
+        const card = document.createElement('div');
+        card.className = "card-glow rounded-2xl p-5 border border-slate-800 flex flex-col justify-between space-y-4";
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between text-xs font-semibold mb-3">
+              <span class="px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid ${iconClass}"></i> ${file.type}
+              </span>
+              <span class="text-slate-400 text-xs">Ready to Access</span>
+            </div>
+            <h3 class="text-base font-bold text-white leading-snug">
+              ${file.title}
+            </h3>
+          </div>
+          <div class="flex items-center justify-end pt-3 border-t border-slate-800/60">
+            <a href="${file.link}" target="_blank" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-indigo-600/30 flex items-center gap-2">
+              <i class="fa-solid ${btnIcon}"></i> ${btnText}
+            </a>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function filterFolderFiles() {
+      if (!currentSelectedFolder) return;
+      const searchVal = document.getElementById('folderSearch').value.trim().toLowerCase();
+      const folderFiles = groupedFolders[currentSelectedFolder].files;
+
+      const filtered = folderFiles.filter(f => f.title.toLowerCase().includes(searchVal) || f.type.toLowerCase().includes(searchVal));
+      renderFolderFiles(filtered);
+    }
+
+    fetchSheetData();
+  </script>
 </body>
 </html>
