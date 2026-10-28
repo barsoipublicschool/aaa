@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Library - Barsoi Public School</title>
+  <title>Digital Library - Barsoi Public School</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -28,93 +28,126 @@
   <!-- Header & Back Button -->
   <div class="flex items-center justify-between gap-4">
     <div class="flex items-center gap-3">
-      <a href="index.html" class="w-11 h-11 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-white hover:bg-slate-700 transition">
+      <button onclick="handleBack()" id="back-btn" class="w-11 h-11 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-white hover:bg-slate-700 transition" style="display: none;">
         <i class="fa-solid fa-arrow-left text-sm"></i>
+      </button>
+      <a href="index.html" id="home-back-btn" class="w-11 h-11 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-white hover:bg-slate-700 transition">
+        <i class="fa-solid fa-house text-sm"></i>
       </a>
       <div>
         <h1 class="text-xl md:text-2xl font-bold text-white tracking-wide" id="page-title">Digital Library</h1>
-        <p class="text-xs text-slate-400" id="page-subtitle">Select your class to explore books</p>
+        <p class="text-xs text-slate-400" id="page-subtitle">Explore books class and book wise</p>
       </div>
     </div>
+  </div>
 
-    <!-- Search Box -->
-    <div class="relative w-48 md:w-64" id="search-box-container" style="display: none;">
-      <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-      <input 
-        type="text" 
-        id="fileSearch" 
-        oninput="filterFiles()"
-        placeholder="Search chapters..." 
-        class="w-full bg-[#0d1322] border border-blue-900/60 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 transition"
-      />
+  <!-- Dashboard Stats Cards -->
+  <div class="grid grid-cols-3 gap-3" id="dashboard-stats">
+    <div class="card-dark rounded-2xl p-4 bg-[#0f172a] border border-slate-800 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-xl text-blue-400">📚</div>
+      <div>
+        <h4 class="text-lg font-bold text-white" id="stat-pdfs">0</h4>
+        <p class="text-[11px] text-slate-400">Total PDFs</p>
+      </div>
     </div>
+    <div class="card-dark rounded-2xl p-4 bg-[#0f172a] border border-slate-800 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-xl text-purple-400">🎓</div>
+      <div>
+        <h4 class="text-lg font-bold text-white" id="stat-classes">0</h4>
+        <p class="text-[11px] text-slate-400">Classes</p>
+      </div>
+    </div>
+    <div class="card-dark rounded-2xl p-4 bg-[#0f172a] border border-slate-800 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-xl text-emerald-400">📖</div>
+      <div>
+        <h4 class="text-lg font-bold text-white" id="stat-books">0</h4>
+        <p class="text-[11px] text-slate-400">Books</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Search Box -->
+  <div class="relative w-full">
+    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+    <input 
+      type="text" 
+      id="globalSearch" 
+      oninput="handleSearch()"
+      placeholder="Search by Class, Book, Subject or Title..." 
+      class="w-full bg-[#0d1322] border border-blue-900/60 rounded-xl pl-10 pr-4 py-3 text-xs text-white focus:outline-none focus:border-blue-500 transition shadow-inner"
+    />
   </div>
 
   <!-- Breadcrumb Navigation -->
   <div id="breadcrumb" class="text-xs text-slate-400 flex items-center gap-2">
-    <span class="text-blue-400 cursor-pointer hover:underline" onclick="goToClasses()">Library</span>
+    <span class="text-blue-400 cursor-pointer hover:underline" onclick="resetView()">Library Home</span>
     <span id="breadcrumb-sub"></span>
   </div>
 
-  <!-- Main Grid Container -->
+  <!-- Main Container -->
   <div id="main-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div class="text-slate-400 text-sm col-span-2 text-center py-12">
-      <i class="fa-solid fa-spinner fa-spin mr-2 text-lg"></i> Loading library books from Google Drive...
+      <i class="fa-solid fa-spinner fa-spin mr-2 text-lg"></i> Loading digital library...
     </div>
   </div>
 
-  <!-- JavaScript Library Logic -->
   <script>
-    let libraryData = {}; // Structure: { ClassName: { SubjectName: [ {title, link, type} ] } }
+    let libraryData = {}; // Structure: { Class: { Book: { Subject: [files] } } }
+    let rawRecords = [];
+    let currentView = 'classes'; // 'classes', 'books', 'files', 'search'
     let selectedClass = null;
-    let selectedSubject = null;
+    let selectedBook = null;
 
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzkmcpN0ZHbDp0nFRRoUuxI9KOD8c4UqIs_ej9RydRvG4nD0IDkb7l3dNCk33uQAsZN/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyDEcd7w6IMwIOYrRlod7ltjO90EQUYzRgCgMUBqMidrpCyhJzoCZOVmGJ75pUQZ6a7/exec";
 
-    async function fetchLibraryData() {
+    async function initLibrary() {
       try {
         const response = await fetch(WEB_APP_URL);
-        const rows = await response.json();
+        rawRecords = await response.json();
         
         libraryData = {};
+        let booksSet = new Set();
 
-        rows.forEach(row => {
-          let className = row[0] ? String(row[0]).trim() : "General";
-          let subject = row[1] ? String(row[1]).trim() : "Uncategorized";
-          let title = row[2] ? String(row[2]).trim() : "Untitled";
-          let type = row[3] ? String(row[3]).trim() : "pdf";
-          let link = row[4] ? String(row[4]).trim() : "#";
+        rawRecords.forEach(item => {
+          let cls = item.className ? String(item.className).trim() : "General";
+          let book = item.book ? String(item.book).trim() : "General Book";
+          let subj = item.subject ? String(item.subject).trim() : "General Subject";
 
-          // Clean up class name formatting
-          if (!className.toLowerCase().includes("class")) {
-            className = "Class " + className;
+          if (!cls.toLowerCase().includes("class")) {
+            cls = "Class " + cls;
           }
 
-          if (!libraryData[className]) {
-            libraryData[className] = {};
-          }
-          if (!libraryData[className][subject]) {
-            libraryData[className][subject] = [];
-          }
+          if (!libraryData[cls]) libraryData[cls] = {};
+          if (!libraryData[cls][book]) libraryData[cls][book] = [];
 
-          libraryData[className][subject].push({ title, type, link });
+          libraryData[cls][book].push(item);
+          booksSet.add(book);
         });
 
-        goToClasses();
+        // Dashboard update
+        document.getElementById('stat-pdfs').innerText = rawRecords.length;
+        document.getElementById('stat-classes').innerText = Object.keys(libraryData).length;
+        document.getElementById('stat-books').innerText = booksSet.size;
+
+        renderClasses();
       } catch (error) {
-        console.error("Error:", error);
+        console.error("Error loading library:", error);
         document.getElementById('main-container').innerHTML = `<div class="text-red-400 text-sm col-span-2 text-center py-10">Library data load karne me error aayi.</div>`;
       }
     }
 
-    // Step 1: View All Classes
-    function goToClasses() {
+    // Step 1: Render Classes
+    function renderClasses() {
+      currentView = 'classes';
       selectedClass = null;
-      selectedSubject = null;
+      selectedBook = null;
+
       document.getElementById('page-title').innerText = "Digital Library";
       document.getElementById('page-subtitle').innerText = "Select your class to explore books";
       document.getElementById('breadcrumb-sub').innerHTML = '';
-      document.getElementById('search-box-container').style.display = 'none';
+      document.getElementById('back-btn').style.display = 'none';
+      document.getElementById('home-back-btn').style.display = 'flex';
+      document.getElementById('dashboard-stats').style.display = 'grid';
 
       const container = document.getElementById('main-container');
       container.innerHTML = '';
@@ -125,11 +158,11 @@
         return;
       }
 
-      classes.forEach(className => {
-        let totalBooks = Object.keys(libraryData[className]).length;
+      classes.forEach(cls => {
+        let totalBooks = Object.keys(libraryData[cls]).length;
         let card = document.createElement('div');
         card.className = "card-glow rounded-2xl p-5 flex items-center justify-between cursor-pointer group";
-        card.onclick = () => selectClass(className);
+        card.onclick = () => selectClass(cls);
 
         card.innerHTML = `
           <div class="flex items-center gap-4">
@@ -137,8 +170,8 @@
               🎓
             </div>
             <div>
-              <h3 class="font-bold text-white text-base group-hover:text-blue-400 transition">${className}</h3>
-              <p class="text-xs text-slate-400 mt-0.5">${totalBooks} Subjects / Books Available</p>
+              <h3 class="font-bold text-white text-base group-hover:text-blue-400 transition">${cls}</h3>
+              <p class="text-xs text-slate-400 mt-0.5">${totalBooks} Books Available</p>
             </div>
           </div>
           <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition">
@@ -149,26 +182,29 @@
       });
     }
 
-    // Step 2: View Subjects/Books inside a Class
-    function selectClass(className) {
-      selectedClass = className;
-      selectedSubject = null;
+    // Step 2: Render Books inside a Class
+    function selectClass(cls) {
+      currentView = 'books';
+      selectedClass = cls;
+      selectedBook = null;
 
-      document.getElementById('page-title').innerText = className;
-      document.getElementById('page-subtitle').innerText = "Select a subject book";
-      document.getElementById('breadcrumb-sub').innerHTML = ` <i class="fa-solid fa-chevron-right text-[10px] mx-1"></i> <span class="text-white cursor-pointer hover:underline" onclick="selectClass('${className}')">${className}</span>`;
-      document.getElementById('search-box-container').style.display = 'none';
+      document.getElementById('page-title').innerText = cls;
+      document.getElementById('page-subtitle').innerText = "Select a book";
+      document.getElementById('breadcrumb-sub').innerHTML = ` <i class="fa-solid fa-chevron-right text-[10px] mx-1"></i> <span class="text-white">${cls}</span>`;
+      document.getElementById('back-btn').style.display = 'flex';
+      document.getElementById('home-back-btn').style.display = 'none';
+      document.getElementById('dashboard-stats').style.display = 'none';
 
       const container = document.getElementById('main-container');
       container.innerHTML = '';
 
-      const subjects = Object.keys(libraryData[className]);
+      const books = Object.keys(libraryData[cls]);
 
-      subjects.forEach(subject => {
-        let fileCount = libraryData[className][subject].length;
+      books.forEach(book => {
+        let itemCount = libraryData[cls][book].length;
         let card = document.createElement('div');
         card.className = "card-glow rounded-2xl p-5 flex items-center justify-between cursor-pointer group";
-        card.onclick = () => selectSubject(subject);
+        card.onclick = () => selectBook(book);
 
         card.innerHTML = `
           <div class="flex items-center gap-4">
@@ -176,8 +212,8 @@
               📚
             </div>
             <div>
-              <h3 class="font-bold text-white text-base group-hover:text-purple-400 transition">${subject}</h3>
-              <p class="text-xs text-slate-400 mt-0.5">${fileCount} Chapters / PDFs</p>
+              <h3 class="font-bold text-white text-base group-hover:text-purple-400 transition">${book}</h3>
+              <p class="text-xs text-slate-400 mt-0.5">${itemCount} Chapters / Files</p>
             </div>
           </div>
           <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-purple-600 group-hover:text-white transition">
@@ -188,20 +224,19 @@
       });
     }
 
-    // Step 3: View PDFs inside a Subject Book
-    function selectSubject(subject) {
-      selectedSubject = subject;
+    // Step 3: Render Files inside a Book
+    function selectBook(book) {
+      currentView = 'files';
+      selectedBook = book;
 
-      document.getElementById('page-title').innerText = subject;
-      document.getElementById('page-subtitle').innerText = `Chapters & PDFs for ${selectedClass}`;
+      document.getElementById('page-title').innerText = book;
+      document.getElementById('page-subtitle').innerText = `Chapters for ${selectedClass}`;
       document.getElementById('breadcrumb-sub').innerHTML = ` 
         <i class="fa-solid fa-chevron-right text-[10px] mx-1"></i> <span class="text-slate-400 cursor-pointer hover:underline" onclick="selectClass('${selectedClass}')">${selectedClass}</span>
-        <i class="fa-solid fa-chevron-right text-[10px] mx-1"></i> <span class="text-white">${subject}</span>
+        <i class="fa-solid fa-chevron-right text-[10px] mx-1"></i> <span class="text-white">${book}</span>
       `;
-      document.getElementById('search-box-container').style.display = 'block';
-      document.getElementById('fileSearch').value = '';
 
-      renderFiles(libraryData[selectedClass][subject]);
+      renderFiles(libraryData[selectedClass][book]);
     }
 
     function renderFiles(files) {
@@ -221,9 +256,9 @@
           <div>
             <div class="flex items-center justify-between text-xs font-semibold mb-3">
               <span class="px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wider flex items-center gap-1.5">
-                <i class="fa-solid fa-file-pdf"></i> PDF Book
+                <i class="fa-solid fa-file-pdf"></i> Subject: ${file.subject}
               </span>
-              <span class="text-slate-400 text-xs">Ready to Read</span>
+              <span class="text-slate-400 text-xs">${file.className}</span>
             </div>
             <h3 class="text-base font-bold text-white leading-snug">
               ${file.title}
@@ -239,15 +274,48 @@
       });
     }
 
-    function filterFiles() {
-      if (!selectedClass || !selectedSubject) return;
-      const query = document.getElementById('fileSearch').value.toLowerCase();
-      const allFiles = libraryData[selectedClass][selectedSubject];
-      const filtered = allFiles.filter(f => f.title.toLowerCase().includes(query));
-      renderFiles(filtered);
+    function handleSearch() {
+      const query = document.getElementById('globalSearch').value.toLowerCase().trim();
+      if (query === '') {
+        if (currentView === 'search') renderClasses();
+        return;
+      }
+
+      currentView = 'search';
+      document.getElementById('page-title').innerText = "Search Results";
+      document.getElementById('page-subtitle').innerText = `Matching: "${query}"`;
+      document.getElementById('breadcrumb-sub').innerHTML = ` <i class="fa-solid fa-chevron-right text-[10px] mx-1"></i> <span class="text-white">Search</span>`;
+      document.getElementById('back-btn').style.display = 'flex';
+      document.getElementById('home-back-btn').style.display = 'none';
+      document.getElementById('dashboard-stats').style.display = 'none';
+
+      let matched = rawRecords.filter(item => {
+        return (
+          item.className.toLowerCase().includes(query) ||
+          item.book.toLowerCase().includes(query) ||
+          item.subject.toLowerCase().includes(query) ||
+          item.title.toLowerCase().includes(query)
+        );
+      });
+
+      renderFiles(matched);
     }
 
-    fetchLibraryData();
+    function handleBack() {
+      document.getElementById('globalSearch').value = '';
+      if (currentView === 'books' || currentView === 'search') {
+        renderClasses();
+      } else if (currentView === 'files') {
+        selectClass(selectedClass);
+      }
+    }
+
+    function resetView() {
+      document.getElementById('globalSearch').value = '';
+      renderClasses();
+    }
+
+    initLibrary();
   </script>
 </body>
 </html>
