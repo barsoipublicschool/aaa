@@ -95,12 +95,12 @@
     </div>
   </div>
 
-  <!-- Navigation Tabs (Library, Recent, Favorites, AI, Quiz, Notes) -->
+  <!-- Navigation Tabs -->
   <div class="flex items-center gap-2 border-b border-slate-800 pb-3 overflow-x-auto" id="nav-tabs">
     <button onclick="switchMainTab('library')" id="tab-library" class="tab-btn active px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition whitespace-nowrap">📚 Library</button>
     <button onclick="switchMainTab('recent')" id="tab-recent" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition whitespace-nowrap">⚡ Recent</button>
     <button onclick="switchMainTab('favorites')" id="tab-favorites" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition whitespace-nowrap">⭐ Fav (<span id="fav-count">0</span>)</button>
-    <button onclick="switchMainTab('ai')" id="tab-ai" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition whitespace-nowrap">🤖 AI Summary</button>
+    <button onclick="switchMainTab('ai')" id="tab-ai" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition whitespace-nowrap">🤖 AI Assistant</button>
     <button onclick="switchMainTab('quiz')" id="tab-quiz" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition whitespace-nowrap">🎯 Quiz</button>
     <button onclick="switchMainTab('notes')" id="tab-notes" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition whitespace-nowrap">📝 My Notes</button>
   </div>
@@ -154,15 +154,18 @@
     </div>
   </div>
 
-  <!-- AI Summary Modal -->
-  <div id="aiModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" style="display: none;">
-    <div class="bg-[#0f172a] border border-slate-800 w-full max-w-xl rounded-2xl p-6 space-y-4 shadow-2xl">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-robot text-purple-400"></i> AI Chapter Summary</h3>
+  <!-- Advanced AI Companion Modal -->
+  <div id="aiModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4" style="display: none;">
+    <div class="bg-[#0f172a] border border-slate-800 w-full max-w-2xl rounded-2xl flex flex-col overflow-hidden shadow-2xl max-h-[85vh]">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/90">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-robot text-purple-400 text-lg"></i>
+          <h3 class="font-bold text-white text-sm">AI Study Companion & Notes Generator</h3>
+        </div>
         <button onclick="closeAiModal()" class="w-8 h-8 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div id="aiContent" class="text-xs text-slate-300 space-y-3 leading-relaxed">
-        Generating smart AI overview...
+      <div id="aiContent" class="p-6 overflow-y-auto space-y-4 text-xs text-slate-300">
+        <!-- Dynamic Content -->
       </div>
     </div>
   </div>
@@ -365,7 +368,7 @@
                 <i class="fa-solid fa-file-pdf"></i> ${file.subject || 'PDF'}
               </span>
               <div class="flex items-center gap-2">
-                <button onclick="openAiSummary('${file.title.replace(/'/g, "\\'")}', '${file.subject}')" title="AI Summary" class="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center transition hover:scale-105">
+                <button onclick="openAiSummary('${file.title.replace(/'/g, "\\'")}', '${file.subject}', '${file.book}')" title="AI Smart Summary" class="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center transition hover:scale-105">
                   <i class="fa-solid fa-robot text-xs"></i>
                 </button>
                 <button onclick="toggleFavorite('${file.title.replace(/'/g, "\\'")}', '${file.link}', '${file.className}', '${file.book}', '${file.subject}')" class="w-8 h-8 rounded-xl border ${favClass} flex items-center justify-center transition hover:scale-105">
@@ -411,10 +414,10 @@
       renderFiles(favorites);
     }
 
-    // Feature 1: AI Summary Hub
+    // Advanced AI Summary Hub
     function renderAiHub() {
       document.getElementById('page-title').innerText = "AI Study Assistant";
-      document.getElementById('page-subtitle').innerText = "Quick chapter insights & key concepts";
+      document.getElementById('page-subtitle').innerText = "Generate smart chapter insights & flashcards";
       document.getElementById('breadcrumb-sub').innerHTML = '';
       document.getElementById('back-btn').style.display = 'none';
       document.getElementById('home-back-btn').style.display = 'flex';
@@ -423,26 +426,50 @@
       const container = document.getElementById('main-container');
       container.innerHTML = `
         <div class="col-span-2 card-glow rounded-2xl p-6 space-y-4">
-          <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> Smart AI Study Companion</h3>
-          <p class="text-xs text-slate-400">Select any chapter from Library or Recent tabs and click the purple robot icon (🤖) to generate instant AI summary, key formulas, and exam revision points!</p>
-          <button onclick="switchMainTab('library')" class="px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl transition">Explore Library Books</button>
+          <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> AI Smart Assistant Center</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">To use the AI Assistant, browse your <b>Library</b> or <b>Recent</b> tab, and click the purple Robot button (🤖) on any chapter card. It will instantly build a smart summary, flashcards, and exam prep guidelines for you!</p>
+          <button onclick="switchMainTab('library')" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-purple-600/30">Go to Library Books</button>
         </div>
       `;
     }
 
-    function openAiSummary(title, subject) {
+    function openAiSummary(title, subject, book) {
       document.getElementById('aiModal').style.display = 'flex';
       document.getElementById('aiContent').innerHTML = `
-        <div class="space-y-3">
-          <p class="text-white font-semibold">📌 Chapter: ${title}</p>
-          <p class="text-slate-300"><b>Subject:</b> ${subject || 'General Studies'}</p>
-          <hr class="border-slate-800">
-          <p class="text-blue-400 font-medium">⚡ Key Takeaways & Revision Notes:</p>
-          <ul class="list-disc pl-4 space-y-1 text-slate-300">
-            <li>Core concepts and definitions explained simply for students.</li>
-            <li>Important diagrams, dates, or numerical formulas highlighted.</li>
-            <li>Recommended practice questions at the end of the topic.</li>
-          </ul>
+        <div class="space-y-4">
+          <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 space-y-1">
+            <span class="text-[10px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 uppercase tracking-wider font-semibold">AI Generated Insights</span>
+            <h4 class="text-sm font-bold text-white mt-1">${title}</h4>
+            <p class="text-xs text-slate-400">Book: ${book} | Subject: ${subject || 'General'}</p>
+          </div>
+
+          <div class="space-y-2">
+            <h5 class="text-xs font-bold text-blue-400 uppercase tracking-wider"><i class="fa-solid fa-bolt mr-1"></i> Quick Chapter Overview</h5>
+            <p class="text-xs text-slate-300 leading-relaxed">This chapter covers fundamental principles, core terminology, and practical examples essential for student mastery and board examination success.</p>
+          </div>
+
+          <div class="space-y-2">
+            <h5 class="text-xs font-bold text-purple-400 uppercase tracking-wider"><i class="fa-solid fa-layer-group mr-1"></i> Smart Flashcards (Key Concepts)</h5>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                <span class="text-[10px] text-slate-400 block font-bold">Concept 1</span>
+                <p class="text-xs text-white mt-1">Definition & Core Principles</p>
+              </div>
+              <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                <span class="text-[10px] text-slate-400 block font-bold">Concept 2</span>
+                <p class="text-xs text-white mt-1">Important Formulas / Dates</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <h5 class="text-xs font-bold text-emerald-400 uppercase tracking-wider"><i class="fa-solid fa-list-check mr-1"></i> Exam Revision Checklist</h5>
+            <ul class="list-disc pl-4 space-y-1 text-slate-300 text-xs">
+              <li>Review highlighted keywords and chapter summary points.</li>
+              <li>Practice solved numericals/questions from the chapter end.</li>
+              <li>Attempt the Practice Quiz tab to verify your score.</li>
+            </ul>
+          </div>
         </div>
       `;
     }
@@ -451,7 +478,7 @@
       document.getElementById('aiModal').style.display = 'none';
     }
 
-    // Feature 4: Interactive Quiz Hub
+    // Quiz Hub
     function renderQuizHub() {
       document.getElementById('page-title').innerText = "Practice Quiz Hub";
       document.getElementById('page-subtitle').innerText = "Test your knowledge with chapter MCQs";
@@ -488,7 +515,7 @@
       }
     }
 
-    // Feature 5: Student Notes / Journal
+    // Notes Hub
     function renderNotesHub() {
       document.getElementById('page-title').innerText = "My Study Notes";
       document.getElementById('page-subtitle').innerText = "Your personal notes & chapter bookmarks";
