@@ -73,7 +73,8 @@
     let groupedFolders = {};
     let currentSelectedFolder = null;
 
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx3xVmlskgXDm355oNXZ90GL-ry3bgIovPUEYtKFEUZEDXGhlVgRcBj-4E5DyMIA5pn/exec";
+    // Naya Web App URL update kiya gaya hai
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxxi0X-Fv-6ALDRqMC8RenZn6boGJ-3EwiAZNw_GrEkdfuPxuz44SZK8PYlEjqDdz0S/exec";
 
     async function fetchSheetData() {
       try {
@@ -97,7 +98,7 @@
         const type      = row[3] ? String(row[3]).trim() : 'PDF';
         const link      = row[4] ? String(row[4]).trim() : '#';
 
-        // Folder key banate hain jaise "Biology (Class 12)"
+        // Folder key banate hain jaise "Biology - Class 12"
         const folderKey = `${subject} - Class ${itemClass}`;
 
         if (!groupedFolders[folderKey]) {
