@@ -6,11 +6,6 @@
   <title>Digital Library - Barsoi Public School</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- PDF.js library for clean custom rendering -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-  <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-  </script>
   <style>
     body {
       background-color: #080c14;
@@ -39,6 +34,17 @@
     .tab-btn.active {
       background-color: #3b82f6;
       color: #ffffff;
+    }
+    /* Mask to disable Google Drive corner pop-up button */
+    .iframe-mask {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 70px;
+      height: 60px;
+      z-index: 20;
+      background: transparent;
+      pointer-events: auto;
     }
   </style>
 </head>
@@ -122,38 +128,30 @@
     </div>
   </div>
 
-  <!-- Custom PDF Book Reader Modal -->
-  <div id="pdfModal" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-2 md:p-6" style="display: none;">
-    <div id="modalBox" class="bg-[#0f172a] border border-slate-800 w-full max-w-4xl h-[92vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl relative">
+  <!-- PDF Preview Modal -->
+  <div id="pdfModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-2 md:p-6" style="display: none;">
+    <div id="modalBox" class="bg-[#0f172a] border border-slate-800 w-full max-w-4xl h-[90vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl relative">
       <!-- Modal Header -->
       <div class="flex items-center justify-between px-5 py-3 border-b border-slate-800 bg-slate-900/90">
         <div class="flex items-center gap-2">
           <i class="fa-solid fa-book-open-reader text-blue-400"></i>
-          <h3 id="modalTitle" class="font-bold text-sm text-white truncate max-w-[50vw]">PDF Reader</h3>
+          <h3 id="modalTitle" class="font-bold text-sm text-white truncate max-w-[60vw]">PDF Reader</h3>
         </div>
-        <!-- Book Navigation Controls -->
         <div class="flex items-center gap-2">
-          <button onclick="prevPage()" class="px-3 py-1.5 rounded-xl bg-slate-800 text-white text-xs hover:bg-slate-700 transition flex items-center gap-1">
-            <i class="fa-solid fa-chevron-left"></i> Prev
-          </button>
-          <span id="pageInfo" class="text-xs text-slate-300 font-medium px-2">Page 1 / 1</span>
-          <button onclick="nextPage()" class="px-3 py-1.5 rounded-xl bg-slate-800 text-white text-xs hover:bg-slate-700 transition flex items-center gap-1">
-            Next <i class="fa-solid fa-chevron-right"></i>
-          </button>
-          <button onclick="toggleFullScreen()" title="Full Screen" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center justify-center transition ml-2">
+          <!-- Fullscreen Button -->
+          <button onclick="toggleFullScreen()" title="Full Screen" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center justify-center transition">
             <i class="fa-solid fa-expand text-xs" id="fsIcon"></i>
           </button>
+          <!-- Close Button -->
           <button onclick="closePdfModal()" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center justify-center transition">
             <i class="fa-solid fa-xmark text-sm"></i>
           </button>
         </div>
       </div>
-      <!-- PDF Canvas Reader Body -->
-      <div class="flex-1 bg-slate-950 flex items-center justify-center overflow-auto p-4 relative">
-        <div id="loadingPdf" class="absolute text-slate-400 text-xs flex items-center gap-2">
-          <i class="fa-solid fa-spinner fa-spin"></i> Loading book pages...
-        </div>
-        <canvas id="pdfCanvas" class="max-h-full max-w-full shadow-2xl rounded-lg"></canvas>
+      <!-- Iframe Body with Mask -->
+      <div class="flex-1 bg-slate-950 relative overflow-hidden flex flex-col">
+        <div class="iframe-mask"></div>
+        <iframe id="pdfIframe" src="" class="w-full h-full border-0"></iframe>
       </div>
     </div>
   </div>
@@ -167,10 +165,7 @@
     let selectedClass = null;
     let selectedBook = null;
 
-    // PDF.js State Variables
-    let pdfDoc = null, pageNum = 1, pageRendering = false, pageNumPending = null, scale = 1.3;
-    let currentPdfUrl = '';
-
+    // Web App URL
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyDEcd7w6IMwIOYrRlod7ltjO90EQUYzRgCgMUBqMidrpCyhJzoCZOVmGJ75pUQZ6a7/exec";
 
     async function initLibrary() {
@@ -416,89 +411,32 @@
       document.getElementById('fav-count').innerText = favorites.length;
     }
 
-    // PDF.js Render Functions
+    // Open PDF Modal with iframe preview
     function openPdfModal(title, link) {
+      let previewLink = link;
+      if (link.includes('drive.google.com')) {
+        if (link.includes('/view')) {
+          previewLink = link.replace('/view', '/preview');
+        } else if (!link.includes('/preview')) {
+          previewLink = link.replace(/\/d\/(.*?)\/.*/, '/d/$1/preview');
+        }
+      }
+
       document.getElementById('modalTitle').innerText = title;
+      document.getElementById('pdfIframe').src = previewLink;
       document.getElementById('pdfModal').style.display = 'flex';
-      document.getElementById('loadingPdf').style.display = 'flex';
-
-      // Convert Google Drive view link to direct download/cors link if needed
-      let fileId = '';
-      if (link.includes('/d/')) {
-        fileId = link.split('/d/')[1].split('/')[0];
-      } else if (link.includes('id=')) {
-        fileId = link.split('id=')[1].split('&')[0];
-      }
-
-      // Using Google proxy or direct url
-      let pdfUrl = fileId ? `https://docs.google.com/uc?export=download&id=${fileId}` : link;
-
-      pageNum = 1;
-      pdfjsLib.getDocument(pdfUrl).promise.then(function(pdfDoc_) {
-        pdfDoc = pdfDoc_;
-        document.getElementById('loadingPdf').style.display = 'none';
-        renderPage(pageNum);
-      }).catch(err => {
-        console.error(err);
-        document.getElementById('loadingPdf').innerHTML = `<span class="text-red-400">PDF load karne me error aayi. CORS policy restriction ho sakti hai.</span>`;
-      });
-    }
-
-    function renderPage(num) {
-      pageRendering = true;
-      pdfDoc.getPage(num).then(function(page) {
-        var canvas = document.getElementById('pdfCanvas');
-        var ctx = canvas.getContext('2d');
-        var viewport = page.getViewport({ scale: scale });
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-
-        var renderContext = {
-          canvasContext: ctx,
-          viewport: viewport
-        };
-        var renderTask = page.render(renderContext);
-
-        renderTask.promise.then(function() {
-          pageRendering = false;
-          if (pageNumPending !== null) {
-            renderPage(pageNumPending);
-            pageNumPending = null;
-          }
-        });
-      });
-      document.getElementById('pageInfo').innerText = `Page ${num} / ${pdfDoc.numPages}`;
-    }
-
-    function queueRenderPage(num) {
-      if (pageRendering) {
-        pageNumPending = num;
-      } else {
-        renderPage(num);
-      }
-    }
-
-    function prevPage() {
-      if (pageNum <= 1) return;
-      pageNum--;
-      queueRenderPage(pageNum);
-    }
-
-    function nextPage() {
-      if (pageNum >= pdfDoc.numPages) return;
-      pageNum++;
-      queueRenderPage(pageNum);
     }
 
     function closePdfModal() {
       document.getElementById('pdfModal').style.display = 'none';
-      pdfDoc = null;
+      document.getElementById('pdfIframe').src = '';
       if (document.fullscreenElement) {
         document.exitFullscreen();
         document.getElementById('fsIcon').className = "fa-solid fa-expand text-xs";
       }
     }
 
+    // Full Screen Toggle
     function toggleFullScreen() {
       const modalBox = document.getElementById('modalBox');
       const fsIcon = document.getElementById('fsIcon');
